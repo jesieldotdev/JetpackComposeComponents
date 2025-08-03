@@ -30,7 +30,7 @@ data class CustomButtonProps(
 fun CustomButton(props: CustomButtonProps){
 
     Button(
-        onClick = {props.handleClick},
+        onClick = props.handleClick,
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(24.dp, 16.dp),
         modifier = Modifier.fillMaxWidth()
