@@ -1,5 +1,6 @@
 package com.jesiel.myapplication
 
+import SvgButtonWithUrl
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,9 +39,11 @@ import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.ui.components.CustomButton
 import com.jesiel.myapplication.ui.components.CustomButtonProps
 import com.jesiel.myapplication.ui.components.CustomCheckbox
+import com.jesiel.myapplication.ui.components.CustomIconButton
 import com.jesiel.myapplication.ui.components.CustomTextInput
 import com.jesiel.myapplication.ui.components.StyledText
 import com.jesiel.myapplication.ui.theme.MyApplicationTheme
+import com.jesiel.myapplication.ui.theme.Purple40
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,14 +88,16 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             CustomTextInput(email, label = "Email")
             CustomTextInput(password, label = "Senha")
             Row(
+
                 modifier= Modifier
                     .fillMaxWidth(),
+//                    .background(color = Purple40),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(0.dp)
 
 
             ) {
-                CustomCheckbox("Permanecer conectado")
+                CustomCheckbox(label="Permanecer conectado")
 
 
             }
@@ -104,14 +109,22 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
             )
 
-            Column (
-                Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.LightGray)
-                    .padding(12.dp, 4.dp)
-                    ){
-                Text(text="Ou")
+                Text(text="Ou logar com")
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+//                CustomIconButton()
+                SvgButtonWithUrl(
+                    onClick = { /* ação do botão */ },
+                    svgUrl = "https://www.svgrepo.com/show/303108/google-icon-logo.svg"
+                )
+                SvgButtonWithUrl(
+                    onClick = { /* ação do botão */ },
+                    svgUrl = "https://www.svgrepo.com/show/512317/github-142.svg"
+                )
             }
+
         }
 
     }
