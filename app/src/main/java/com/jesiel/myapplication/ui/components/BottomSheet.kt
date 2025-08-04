@@ -13,31 +13,18 @@ fun ExampleBottomSheet(
     showSheet: Boolean,
     onDismissSheet: () -> Unit
 ) {
-    // Estado de controle
     val sheetState = rememberModalBottomSheetState()
-//    var showSheet by remember { mutableStateOf(false) }
 
-    // Botão para mostrar o bottom modal
-//    Button(onClick = { showSheet = true }) {
-//        Text("Abrir Bottom Modal")
-//    }
 
-    // O ModalBottomSheet
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = onDismissSheet,
             sheetState = sheetState
         ) {
-            // Conteúdo do modal
-            Text(
-                text = "Conteúdo do Bottom ModalSheet!",
-                modifier = Modifier.padding(24.dp)
-            )
+
 
             MarkdownEditor()
-//            Button(onClick = { onDismissSheet  }) {
-//                Text("Fechar")
-//            }
+
         }
     }
 }

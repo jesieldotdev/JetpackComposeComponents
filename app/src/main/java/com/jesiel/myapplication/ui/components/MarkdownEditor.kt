@@ -2,6 +2,9 @@ package com.jesiel.myapplication.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -9,7 +12,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jesiel.myapplication.ui.theme.MyApplicationTheme
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
@@ -17,14 +26,39 @@ fun MarkdownEditor() {
     var text by remember { mutableStateOf("") }
     var isPreview by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Edit", modifier = Modifier.weight(1f))
+    Column(
+        modifier = Modifier.padding(16.dp)
+            .fillMaxHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally
+        ,
+
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+            ) {
+            Text(
+                "Edit",
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurface
+
+            )
+
+
             Switch(
                 checked = isPreview,
                 onCheckedChange = { isPreview = it }
             )
-            Text("Preview", modifier = Modifier.weight(1f))
+
+
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data("https://www.svgrepo.com/show/334668/file-md.svg")
+                    .decoderFactory(coil.decode.SvgDecoder.Factory())
+                    .build(),
+                contentDescription = "SVG Icon",
+                modifier = Modifier.size(24.dp)
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -48,5 +82,14 @@ fun MarkdownEditor() {
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MarkdownPreview(){
+    MyApplicationTheme(dynamicColor = false) {
+        MarkdownEditor()
+
     }
 }
