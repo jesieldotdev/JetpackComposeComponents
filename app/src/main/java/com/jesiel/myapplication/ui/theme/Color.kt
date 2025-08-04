@@ -32,7 +32,7 @@ val Black       = Color(0xFF000000)
 
 val Grey10      = Color(0xFFF5F5F5)
 val Grey20      = Color(0xFFEEEEEE)
-val Zinc = Color(0XF343434)
+val Zinc = Color(0XFF343434)
 val Grey30      = Color(0xFFE0E0E0)
 val Grey40      = Color(0xFFBDBDBD)
 val Grey50      = Color(0xFF9E9E9E)
