@@ -27,14 +27,14 @@ fun SvgButtonWithUrl(onClick: () -> Unit, svgUrl: String) {
 
     ) {
 
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(svgUrl)
-                .decoderFactory(coil.decode.SvgDecoder.Factory())
-                .build(),
-            contentDescription = "SVG Icon",
-            modifier = Modifier.size(24.dp)
-        )
+//        AsyncImage(
+//            model = ImageRequest.Builder(LocalContext.current)
+//                .data(svgUrl)
+//                .decoderFactory(coil.decode.SvgDecoder.Factory())
+//                .build(),
+//            contentDescription = "SVG Icon",
+//            modifier = Modifier.size(24.dp)
+//        )
 
     }
 }

@@ -21,7 +21,7 @@ fun Header() {
         Text(
             text = "Today",
             fontWeight = FontWeight.Bold,
-            fontSize = 42.sp,
+            fontSize = 32.sp,
         )
     }
 

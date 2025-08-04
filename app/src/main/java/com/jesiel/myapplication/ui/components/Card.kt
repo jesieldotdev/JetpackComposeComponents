@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,10 +27,17 @@ import com.jesiel.myapplication.ui.theme.MyApplicationTheme
 fun Card(isActive: Boolean) {
     Column(
         modifier = Modifier
+            .shadow(
+                8.dp,
+                shape = RoundedCornerShape(2.dp)
+            )
             .clip(RoundedCornerShape(16.dp))
+
             .fillMaxWidth()
             .background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
-            .padding(24.dp, 8.dp)
+            .padding(
+                24.dp, 8.dp)
+
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
@@ -58,7 +66,7 @@ fun Card(isActive: Boolean) {
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun CardPreview() {
     MyApplicationTheme(dynamicColor = false) {
