@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.jesiel.myapplication.ui.components.Card
+import com.jesiel.myapplication.ui.components.ExampleBottomSheet
 import com.jesiel.myapplication.ui.components.Header
 
 import com.jesiel.myapplication.ui.theme.Grey80
@@ -56,7 +57,7 @@ fun HomeContent(){
             Spacer(modifier = Modifier.height(16.dp))
             Card(isActive = true)
             Card(isActive = false)
-
+            ExampleBottomSheet()
 
         }
     }
