@@ -2,6 +2,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,33 +45,35 @@ fun Day(
     isSelected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
+
+    val pallete = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .width(44.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null, // REMOVE O RIPPLE E O FUNDO AO CLICAR
+                indication = null,
                 onClick = onClick
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = day,
-            color = if (isSelected) Color(0xFF2196F3) else Color(0xFFAAAAAA),
+            color = if (isSelected) pallete.primary else pallete.onSecondary,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             fontSize = 16.sp
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = number,
-            color = if (isSelected) Color(0xFF2196F3) else Color(0xFF222222),
+            color = if (isSelected) pallete.primary else pallete.onSurface,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             fontSize = 18.sp
         )
         if (isSelected) {
             Spacer(modifier = Modifier.height(4.dp))
             Canvas(modifier = Modifier.size(6.dp)) {
-                drawCircle(color = Color(0xFF2196F3))
+                drawCircle(color = pallete.primary)
             }
         }
     }

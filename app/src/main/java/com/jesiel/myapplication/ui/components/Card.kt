@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -18,17 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jesiel.myapplication.ui.theme.Blue40
 import com.jesiel.myapplication.ui.theme.Grey60
 import com.jesiel.myapplication.ui.theme.MyApplicationTheme
 
 @Composable
-fun Card() {
+fun Card(isActive: Boolean) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
-            .background(Color(0xFFF8F9FD))
+            .background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
             .padding(24.dp, 8.dp)
     ) {
         Row(
@@ -37,12 +37,13 @@ fun Card() {
             Text(
                 text = "Wakeup",
                 fontWeight = FontWeight.W800,
-                fontSize = 20.sp
+                fontSize = 20.sp,
+                color = if (isActive) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(32.dp))
             Text(
                 text = "7:00 AM",
-                color = Grey60
+                color = if(isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
             )
         }
         Row(
@@ -51,8 +52,8 @@ fun Card() {
 
             Text(
                 text = "Early wakeup from bed and fresh",
-                color = Grey60
-                )
+                color = if(isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
+            )
         }
     }
 }
@@ -60,7 +61,13 @@ fun Card() {
 @Preview
 @Composable
 fun CardPreview() {
-    MyApplicationTheme {
-        Card()
+    MyApplicationTheme(dynamicColor = false) {
+        Column {
+            Card(isActive = true)
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(isActive = false)
+        }
     }
+
+
 }

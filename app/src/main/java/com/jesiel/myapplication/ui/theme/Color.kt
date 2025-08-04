@@ -12,6 +12,7 @@ val Pink40 = Color(0xFF7D5260)
 
 // Colors: blue, green, yellow, red, orange, teal
 val Blue80 = Color(0xFFB3C7F7)
+val VibrantBlue = Color(0xFF2196F3)
 val Blue40 = Color(0xFF3366CC)
 val Green80 = Color(0xFFB8F8BC)
 val Green40 = Color(0xFF2E7D32)
@@ -27,6 +28,7 @@ val Teal40 = Color(0xFF00897B)
 // Neutral colors
 val White       = Color(0xFFFFFFFF)
 val Black       = Color(0xFF000000)
+
 val Grey10      = Color(0xFFF5F5F5)
 val Grey20      = Color(0xFFEEEEEE)
 val Grey30      = Color(0xFFE0E0E0)

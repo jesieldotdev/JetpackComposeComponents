@@ -23,9 +23,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AppNavigation(Modifier.padding(innerPadding))
-                }
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    AppNavigation()
+//                }
             }
         }
     }
@@ -47,7 +47,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun AppNavigationPreview() {
-    MyApplicationTheme {
+    MyApplicationTheme (
+        dynamicColor = false
+    ){
         AppNavigation()
     }
 }
