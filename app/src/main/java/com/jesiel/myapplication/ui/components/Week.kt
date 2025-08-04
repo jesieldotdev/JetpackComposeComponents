@@ -66,7 +66,7 @@ fun Day(
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = number,
-            color = if (isSelected) pallete.primary else pallete.onSurface,
+            color = if (isSelected) pallete.primary else pallete.onSecondary,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             fontSize = 18.sp
         )
@@ -79,10 +79,10 @@ fun Day(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun previewWeek() {
-    MyApplicationTheme {
+    MyApplicationTheme (dynamicColor = false){
         Week()
     }
 }

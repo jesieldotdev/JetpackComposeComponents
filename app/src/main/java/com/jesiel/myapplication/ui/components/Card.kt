@@ -38,7 +38,7 @@ fun Card(isActive: Boolean) {
                 text = "Wakeup",
                 fontWeight = FontWeight.W800,
                 fontSize = 20.sp,
-                color = if (isActive) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
+                color = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(32.dp))
             Text(

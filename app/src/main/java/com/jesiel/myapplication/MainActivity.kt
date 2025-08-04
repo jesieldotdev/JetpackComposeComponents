@@ -22,10 +22,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AppNavigation()
-//                }
+            MyApplicationTheme(
+                dynamicColor = false
+            ) {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    AppNavigation(modifier = Modifier.padding(innerPadding))
+                }
             }
         }
     }
@@ -36,20 +38,22 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
-        startDestination = "login",
+        startDestination = "home",
         modifier = modifier
     ) {
         composable("login") { LoginScreen(navController) }
-        composable("/home") { HomeScreen(navController) }
+        composable("home") { HomeScreen(navController) }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun AppNavigationPreview() {
-    MyApplicationTheme (
-        dynamicColor = false
-    ){
-        AppNavigation()
+    MyApplicationTheme(
+        dynamicColor = false,
+    ) {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            AppNavigation(modifier = Modifier.padding(innerPadding))
+        }
     }
 }
