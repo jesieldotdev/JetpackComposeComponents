@@ -9,20 +9,23 @@ import androidx.compose.ui.window.DialogProperties
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExampleBottomSheet() {
+fun ExampleBottomSheet(
+    showSheet: Boolean,
+    onDismissSheet: () -> Unit
+) {
     // Estado de controle
     val sheetState = rememberModalBottomSheetState()
-    var showSheet by remember { mutableStateOf(false) }
+//    var showSheet by remember { mutableStateOf(false) }
 
     // Botão para mostrar o bottom modal
-    Button(onClick = { showSheet = true }) {
-        Text("Abrir Bottom Modal")
-    }
+//    Button(onClick = { showSheet = true }) {
+//        Text("Abrir Bottom Modal")
+//    }
 
     // O ModalBottomSheet
     if (showSheet) {
         ModalBottomSheet(
-            onDismissRequest = { showSheet = false },
+            onDismissRequest = onDismissSheet,
             sheetState = sheetState
         ) {
             // Conteúdo do modal
@@ -30,7 +33,7 @@ fun ExampleBottomSheet() {
                 text = "Conteúdo do Bottom ModalSheet!",
                 modifier = Modifier.padding(24.dp)
             )
-            Button(onClick = { showSheet = false }) {
+            Button(onClick = { onDismissSheet  }) {
                 Text("Fechar")
             }
         }

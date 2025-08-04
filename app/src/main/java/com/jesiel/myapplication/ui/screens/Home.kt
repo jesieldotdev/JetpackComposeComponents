@@ -28,14 +28,22 @@ import com.jesiel.myapplication.ui.theme.Grey80
 import com.jesiel.myapplication.ui.theme.MyApplicationTheme
 
 @Composable
-fun HomeScreen(navController: NavHostController){
+fun HomeScreen(
+//    navController: NavHostController,
+    showSheet: Boolean,
+    onDismissSheet: () -> Unit
+){
 
- HomeContent()
+ HomeContent(showSheet,
+     onDismissSheet)
 
 }
 
 @Composable
-fun HomeContent(){
+fun HomeContent(
+    showSheet: Boolean,
+                onDismissSheet: () -> Unit
+){
     MyApplicationTheme(dynamicColor = false) {
     Column(
         Modifier
@@ -57,7 +65,10 @@ fun HomeContent(){
             Spacer(modifier = Modifier.height(16.dp))
             Card(isActive = true)
             Card(isActive = false)
-            ExampleBottomSheet()
+            ExampleBottomSheet(
+                showSheet,
+                onDismissSheet
+            )
 
         }
     }
@@ -65,8 +76,8 @@ fun HomeContent(){
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun AppNavigationPreview() {
-   HomeContent()
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun AppNavigationPreview() {
+//   HomeContent(showSheet)
+//}

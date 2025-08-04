@@ -14,6 +14,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
@@ -31,11 +35,12 @@ class MainActivity : ComponentActivity() {
             MyApplicationTheme(
                 dynamicColor = false
             ) {
+                var showSheet by remember { mutableStateOf(false) }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     floatingActionButton = {
                         FloatingActionButton(
-                            onClick = { /* TODO: ação ao clicar */ },
+                            onClick = { showSheet = true },
                             containerColor = MaterialTheme.colorScheme.primary
 
                         ) {
@@ -46,7 +51,12 @@ class MainActivity : ComponentActivity() {
                         }
                     },
                     ) { innerPadding ->
-                    AppNavigation(modifier = Modifier.padding(innerPadding))
+                    AppNavigation(
+                        modifier = Modifier.padding(innerPadding),
+                        showSheet=showSheet,
+                        onDismissSheet={ showSheet = false }
+
+                    )
                 }
             }
         }
@@ -54,7 +64,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(modifier: Modifier = Modifier) {
+fun AppNavigation(
+    modifier: Modifier = Modifier,
+    showSheet: Boolean,
+    onDismissSheet: () -> Unit
+) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
@@ -62,18 +76,22 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         composable("login") { LoginScreen(navController) }
-        composable("home") { HomeScreen(navController) }
+        composable("home") { HomeScreen(
+//            navController,
+            showSheet,
+            onDismissSheet
+        ) }
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun AppNavigationPreview() {
-    MyApplicationTheme(
-        dynamicColor = false,
-    ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            AppNavigation(modifier = Modifier.padding(innerPadding))
-        }
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun AppNavigationPreview() {
+//    MyApplicationTheme(
+//        dynamicColor = false,
+//    ) {
+//        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//            AppNavigation(modifier = Modifier.padding(innerPadding))
+//        }
+//    }
+//}
