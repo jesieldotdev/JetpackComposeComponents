@@ -33,9 +33,11 @@ fun ExampleBottomSheet(
                 text = "Conteúdo do Bottom ModalSheet!",
                 modifier = Modifier.padding(24.dp)
             )
-            Button(onClick = { onDismissSheet  }) {
-                Text("Fechar")
-            }
+
+            MarkdownEditor()
+//            Button(onClick = { onDismissSheet  }) {
+//                Text("Fechar")
+//            }
         }
     }
 }
