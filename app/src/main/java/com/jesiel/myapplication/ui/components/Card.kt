@@ -20,38 +20,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jesiel.myapplication.ui.screens.Task
 import com.jesiel.myapplication.ui.theme.Grey60
 import com.jesiel.myapplication.ui.theme.MyApplicationTheme
 
 @Composable
-fun Card(isActive: Boolean) {
+fun Card(task: Task) {
+
     Column(
         modifier = Modifier
-            .shadow(
-                8.dp,
-                shape = RoundedCornerShape(2.dp)
-            )
+//            .shadow(
+//                2.dp,
+//                shape = RoundedCornerShape(2.dp)
+//            )
             .clip(RoundedCornerShape(16.dp))
 
             .fillMaxWidth()
-            .background(if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
+            .background(if (task.done) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
             .padding(
-                24.dp, 8.dp)
+                32.dp, 8.dp)
 
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Wakeup",
+                text = task.title,
                 fontWeight = FontWeight.W800,
                 fontSize = 20.sp,
-                color = if (isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                color = if (task.done) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(32.dp))
             Text(
-                text = "7:00 AM",
-                color = if(isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
+                text = task.createdAt,
+                color = if(task.done) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
             )
         }
         Row(
@@ -59,8 +61,8 @@ fun Card(isActive: Boolean) {
         ) {
 
             Text(
-                text = "Early wakeup from bed and fresh",
-                color = if(isActive) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
+                text = task.text,
+                color = if(task.done) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
             )
         }
     }
@@ -71,9 +73,20 @@ fun Card(isActive: Boolean) {
 fun CardPreview() {
     MyApplicationTheme(dynamicColor = false) {
         Column {
-            Card(isActive = true)
+            Card(
+                Task(
+                title = "Wakeup",
+                text = "Early from bed and fresh",
+                done = false,
+                createdAt = "13:00"
+            ))
             Spacer(modifier = Modifier.height(8.dp))
-            Card(isActive = false)
+            Task(
+                title = "Morning exercises",
+                text = "4 types of exercise",
+                done = true,
+                createdAt = "16:00"
+            )
         }
     }
 

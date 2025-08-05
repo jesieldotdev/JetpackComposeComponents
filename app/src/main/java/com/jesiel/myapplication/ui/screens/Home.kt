@@ -9,22 +9,20 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.jesiel.myapplication.ui.components.Card
 import com.jesiel.myapplication.ui.components.ExampleBottomSheet
 import com.jesiel.myapplication.ui.components.Header
 
-import com.jesiel.myapplication.ui.theme.Grey80
 import com.jesiel.myapplication.ui.theme.MyApplicationTheme
 
 @Composable
@@ -32,50 +30,85 @@ fun HomeScreen(
 //    navController: NavHostController,
     showSheet: Boolean,
     onDismissSheet: () -> Unit
-){
+) {
 
- HomeContent(showSheet,
-     onDismissSheet)
+    HomeContent(
+        showSheet,
+        onDismissSheet
+    )
 
 }
+
+
+data class Task(
+    val title: String,
+    val text: String,
+    val done: Boolean = false,
+    val createdAt: String
+)
+
+
+
 
 @Composable
 fun HomeContent(
     showSheet: Boolean,
-                onDismissSheet: () -> Unit
-){
+    onDismissSheet: () -> Unit
+) {
+    val tasks by remember { mutableStateOf(
+        listOf<Task>(
+            Task(
+                title = "Wakeup",
+                text = "Early from bed and fresh",
+                done = false,
+                createdAt = "7:00 AM"
+            ),
+            Task(
+                title = "Morning exercises",
+                text = "4 types of exercise",
+                done = true,
+                createdAt = "8:00 PM"
+            ),
+        )
+    )}
     MyApplicationTheme(dynamicColor = false) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-        ,
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
 
 //            verticalArrangement = Arrangement.Center
-    ) {
-        Column(
-//                horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
 
-            Header()
-            Week()
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(isActive = true)
-            Card(isActive = false)
-            ExampleBottomSheet(
-                showSheet,
-                onDismissSheet
-            )
+                Header()
+                Week()
+                Spacer(modifier = Modifier.height(16.dp))
+//                Card(isActive = true)
+//                Card(isActive = false)
+                LazyColumn (
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ){
+                    items(tasks) {
+                        task -> Card(task)
+                    }
+                }
+                ExampleBottomSheet(
+                    showSheet,
+                    onDismissSheet
+                )
 
+            }
         }
-    }
     }
 }
 
-
+//
 //@Preview(showBackground = true)
 //@Composable
 //fun AppNavigationPreview() {
