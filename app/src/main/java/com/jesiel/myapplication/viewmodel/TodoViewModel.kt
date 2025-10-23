@@ -6,14 +6,23 @@ import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.data.TodoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+// Represents the state of the UI
+data class TodoUiState(
+    val tasks: List<Task> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
 
 class TodoViewModel : ViewModel() {
 
     private val repository = TodoRepository()
 
-    private val _tasks = MutableStateFlow<List<Task>>(emptyList())
-    val tasks: StateFlow<List<Task>> = _tasks
+    private val _uiState = MutableStateFlow(TodoUiState())
+    val uiState: StateFlow<TodoUiState> = _uiState.asStateFlow()
 
     init {
         fetchTodos()
@@ -21,29 +30,35 @@ class TodoViewModel : ViewModel() {
 
     private fun fetchTodos() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             try {
-                _tasks.value = repository.getTodos()
+                val tasks = repository.getTodos()
+                _uiState.update { it.copy(tasks = tasks, isLoading = false) }
             } catch (e: Exception) {
-                // Handle error
+                _uiState.update { it.copy(error = e.message, isLoading = false) }
                 e.printStackTrace()
             }
         }
     }
 
+    fun refresh() {
+        fetchTodos()
+    }
+
     fun addTodo(title: String) {
         viewModelScope.launch {
-            val currentTasks = _tasks.value
+            val currentTasks = _uiState.value.tasks
             val newId = (currentTasks.maxOfOrNull { it.id } ?: 0) + 1
             val newTask = Task(id = newId, title = title, done = false)
-            
+
             // Optimistic update
-            _tasks.value = currentTasks + newTask
+            _uiState.update { it.copy(tasks = currentTasks + newTask) }
 
             try {
-                repository.updateTodos(_tasks.value)
+                repository.updateTodos(_uiState.value.tasks)
             } catch (e: Exception) {
                 // Revert on error
-                _tasks.value = currentTasks
+                _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
                 e.printStackTrace()
             }
         }
