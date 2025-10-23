@@ -25,15 +25,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.jesiel.myapplication.ui.screens.HomeScreen
 import com.jesiel.myapplication.ui.screens.LoginScreen
-import com.jesiel.myapplication.ui.theme.MyApplicationTheme
+import com.jesiel.myapplication.ui.theme.myTodosTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme(
-                dynamicColor = false
+            myTodosTheme(
+                dynamicColor = true
             ) {
                 var showSheet by remember { mutableStateOf(false) }
                 Scaffold(
@@ -87,7 +87,7 @@ fun AppNavigation(
 //@Preview(showBackground = true)
 //@Composable
 //fun AppNavigationPreview() {
-//    MyApplicationTheme(
+//    myTodosTheme(
 //        dynamicColor = false,
 //    ) {
 //        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

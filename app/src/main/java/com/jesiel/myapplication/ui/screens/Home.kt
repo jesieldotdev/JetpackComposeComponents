@@ -23,7 +23,9 @@ import com.jesiel.myapplication.ui.components.Card
 import com.jesiel.myapplication.ui.components.ExampleBottomSheet
 import com.jesiel.myapplication.ui.components.Header
 
-import com.jesiel.myapplication.ui.theme.MyApplicationTheme
+import com.jesiel.myapplication.ui.theme.myTodosTheme
+
+import com.jesiel.myapplication.viewmodel.UserViewModel
 
 @Composable
 fun HomeScreen(
@@ -55,6 +57,9 @@ fun HomeContent(
     showSheet: Boolean,
     onDismissSheet: () -> Unit
 ) {
+
+
+
     val tasks by remember { mutableStateOf(
         listOf<Task>(
             Task(
@@ -71,7 +76,7 @@ fun HomeContent(
             ),
         )
     )}
-    MyApplicationTheme(dynamicColor = false) {
+    myTodosTheme(dynamicColor = false) {
         Column(
             Modifier
                 .fillMaxWidth()
@@ -98,6 +103,9 @@ fun HomeContent(
                         task -> Card(task)
                     }
                 }
+
+
+
                 ExampleBottomSheet(
                     showSheet,
                     onDismissSheet

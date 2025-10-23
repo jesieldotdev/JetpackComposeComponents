@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import com.jesiel.myapplication.ui.theme.MyApplicationTheme
+import com.jesiel.myapplication.ui.theme.myTodosTheme
 
 @Composable
 fun Header() {
@@ -30,7 +30,7 @@ fun Header() {
 @Preview
 @Composable
 fun HeaderPreview() {
-    MyApplicationTheme {
+    myTodosTheme {
         Header()
     }
 }

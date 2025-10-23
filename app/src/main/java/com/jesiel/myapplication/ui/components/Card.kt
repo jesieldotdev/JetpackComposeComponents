@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.ui.screens.Task
 import com.jesiel.myapplication.ui.theme.Grey60
-import com.jesiel.myapplication.ui.theme.MyApplicationTheme
+import com.jesiel.myapplication.ui.theme.myTodosTheme
 
 @Composable
 fun Card(task: Task) {
@@ -71,7 +71,7 @@ fun Card(task: Task) {
 @Preview(showBackground = true)
 @Composable
 fun CardPreview() {
-    MyApplicationTheme(dynamicColor = false) {
+    myTodosTheme(dynamicColor = false) {
         Column {
             Card(
                 Task(

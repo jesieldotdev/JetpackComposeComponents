@@ -18,11 +18,12 @@ import com.jesiel.myapplication.ui.theme.myTodosTheme
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
+import coil.decode.SvgDecoder
 import coil.request.ImageRequest
 import dev.jeziellago.compose.markdowntext.MarkdownText
 
 @Composable
-fun MarkdownEditor() {
+fun CreateTodo() {
     var text by remember { mutableStateOf("") }
     var isPreview by remember { mutableStateOf(false) }
 
@@ -38,27 +39,27 @@ fun MarkdownEditor() {
             verticalAlignment = Alignment.CenterVertically
             ) {
             Text(
-                "Edit",
+                "Adicionar Tarefa",
                 modifier = Modifier.weight(1f),
                 color = MaterialTheme.colorScheme.onSurface
 
             )
 
 
-            Switch(
-                checked = isPreview,
-                onCheckedChange = { isPreview = it }
-            )
+//            Switch(
+//                checked = isPreview,
+//                onCheckedChange = { isPreview = it }
+//            )
 
 
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data("https://www.svgrepo.com/show/334668/file-md.svg")
-                    .decoderFactory(coil.decode.SvgDecoder.Factory())
-                    .build(),
-                contentDescription = "SVG Icon",
-                modifier = Modifier.size(24.dp)
-            )
+//            AsyncImage(
+//                model = ImageRequest.Builder(LocalContext.current)
+//                    .data("https://www.svgrepo.com/show/334668/file-md.svg")
+//                    .decoderFactory(SvgDecoder.Factory())
+//                    .build(),
+//                contentDescription = "SVG Icon",
+//                modifier = Modifier.size(24.dp)
+//            )
         }
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -66,8 +67,16 @@ fun MarkdownEditor() {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Markdown input") },
+                label = { Text("O que está pensando?") },
                 modifier = Modifier.fillMaxWidth().height(200.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CustomButton(
+                CustomButtonProps(
+                    handleClick = { },
+                    text = "Adicionar"
+                )
             )
         } else {
             Surface(
@@ -87,9 +96,9 @@ fun MarkdownEditor() {
 
 @Preview(showBackground = true)
 @Composable
-fun MarkdownPreview(){
+fun CreateTodoPreview(){
     myTodosTheme(dynamicColor = false) {
-        MarkdownEditor()
+        CreateTodo()
 
     }
 }

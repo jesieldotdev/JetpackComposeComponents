@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jesiel.myapplication.ui.theme.MyApplicationTheme
+import com.jesiel.myapplication.ui.theme.myTodosTheme
 
 @Composable
 fun Week() {
@@ -82,7 +82,7 @@ fun Day(
 @Preview(showBackground = true)
 @Composable
 fun previewWeek() {
-    MyApplicationTheme (dynamicColor = false){
+    myTodosTheme (dynamicColor = false){
         Week()
     }
 }
