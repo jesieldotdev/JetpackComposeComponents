@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme(
-                dynamicColor = false
+                dynamicColor = true
             ) {
                 var showSheet by remember { mutableStateOf(false) }
                 Scaffold(

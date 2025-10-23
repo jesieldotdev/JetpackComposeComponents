@@ -25,6 +25,8 @@ import com.jesiel.myapplication.ui.components.Header
 
 import com.jesiel.myapplication.ui.theme.MyApplicationTheme
 
+import com.jesiel.myapplication.viewmodel.UserViewModel
+
 @Composable
 fun HomeScreen(
 //    navController: NavHostController,
@@ -55,6 +57,9 @@ fun HomeContent(
     showSheet: Boolean,
     onDismissSheet: () -> Unit
 ) {
+
+
+
     val tasks by remember { mutableStateOf(
         listOf<Task>(
             Task(
@@ -98,6 +103,9 @@ fun HomeContent(
                         task -> Card(task)
                     }
                 }
+
+
+
                 ExampleBottomSheet(
                     showSheet,
                     onDismissSheet
