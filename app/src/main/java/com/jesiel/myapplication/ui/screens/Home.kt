@@ -63,61 +63,61 @@ fun HomeContent(
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
 
-    myTodosTheme(dynamicColor = false) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .pullRefresh(pullRefreshState)
-        ) {
-            if (uiState.isLoading && uiState.tasks.isEmpty()) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            } else {
-                Column(
-                    Modifier.padding(16.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .pullRefresh(pullRefreshState)
+    ) {
+        if (uiState.isLoading && uiState.tasks.isEmpty()) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else {
+            Column(
+                Modifier.padding(16.dp)
+            ) {
+                Header()
+                Spacer(modifier = Modifier.height(16.dp))
+                Week()
+                Spacer(modifier = Modifier.height(16.dp))
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Header()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Week()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.tasks) { task ->
-                            Card(task = task, onToggleStatus = onToggleTaskStatus)
-                        }
+                    items(uiState.tasks) { task ->
+                        Card(task = task, onToggleStatus = onToggleTaskStatus)
                     }
                 }
             }
-
-            PullRefreshIndicator(
-                refreshing = uiState.isLoading,
-                state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-
-            ExampleBottomSheet(
-                showSheet = showSheet,
-                onDismissSheet = onDismissSheet,
-                onSave = onSaveTodo
-            )
         }
+
+        PullRefreshIndicator(
+            refreshing = uiState.isLoading,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
+
+        ExampleBottomSheet(
+            showSheet = showSheet,
+            onDismissSheet = onDismissSheet,
+            onSave = onSaveTodo
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun HomeContentPreview() {
-    val sampleTasks = listOf(
-        Task(id = 1, title = "Wakeup", done = false),
-        Task(id = 2, title = "Morning exercises", done = true),
-    )
-    HomeContent(
-        uiState = TodoUiState(tasks = sampleTasks),
-        showSheet = false,
-        onDismissSheet = {},
-        onSaveTodo = {},
-        onRefresh = {},
-        onToggleTaskStatus = {}
-    )
+    myTodosTheme {
+        val sampleTasks = listOf(
+            Task(id = 1, title = "Wakeup", done = false),
+            Task(id = 2, title = "Morning exercises", done = true),
+        )
+        HomeContent(
+            uiState = TodoUiState(tasks = sampleTasks),
+            showSheet = false,
+            onDismissSheet = {},
+            onSaveTodo = {},
+            onRefresh = {},
+            onToggleTaskStatus = {}
+        )
+    }
 }

@@ -9,22 +9,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.ui.theme.myTodosTheme
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 @Composable
 fun Week() {
-    val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    val numbers = listOf("4", "5", "6", "7", "8", "9", "10")
-    var selectedIndex by remember { mutableStateOf(5) } // Saturday initially
+    // Translated and abbreviated days of the week in Portuguese
+    val daysOfWeek = listOf("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
+    val today = LocalDate.now().dayOfWeek.value - 1 // Monday is 1, so we subtract 1 to get index 0
+    var selectedIndex by remember { mutableStateOf(today) }
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 0.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
@@ -32,7 +34,8 @@ fun Week() {
         daysOfWeek.forEachIndexed { i, day ->
             Day(
                 day = day,
-                number = numbers[i],
+                // Simple example for numbers, can be improved to match the actual calendar
+                number = (LocalDate.now().dayOfMonth - today + i).toString(),
                 isSelected = i == selectedIndex,
                 onClick = { selectedIndex = i }
             )
@@ -47,8 +50,10 @@ fun Day(
     isSelected: Boolean = false,
     onClick: () -> Unit = {}
 ) {
+    val palette = MaterialTheme.colorScheme
+    // Use onSurfaceVariant for better contrast in light/dark themes
+    val textColor = if (isSelected) palette.primary else palette.onSurfaceVariant
 
-    val pallete = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .width(44.dp)
@@ -61,21 +66,21 @@ fun Day(
     ) {
         Text(
             text = day,
-            color = if (isSelected) pallete.primary else pallete.onSecondary,
+            color = textColor,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             fontSize = 16.sp
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = number,
-            color = if (isSelected) pallete.primary else pallete.onSecondary,
+            color = textColor,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
             fontSize = 18.sp
         )
         if (isSelected) {
             Spacer(modifier = Modifier.height(4.dp))
             Canvas(modifier = Modifier.size(6.dp)) {
-                drawCircle(color = pallete.primary)
+                drawCircle(color = palette.primary)
             }
         }
     }
@@ -83,8 +88,8 @@ fun Day(
 
 @Preview(showBackground = true)
 @Composable
-fun previewWeek() {
-    myTodosTheme (dynamicColor = false){
+fun PreviewWeek() {
+    myTodosTheme(dynamicColor = false) {
         Week()
     }
 }
