@@ -1,5 +1,9 @@
 package com.jesiel.myapplication.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,7 +51,8 @@ fun HomeScreen(
         onDismissSheet = onDismissSheet,
         onSaveTodo = { title -> todoViewModel.addTodo(title) },
         onRefresh = { todoViewModel.refresh() },
-        onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) }
+        onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
+        onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) }
     )
 }
 
@@ -59,7 +64,8 @@ fun HomeContent(
     onDismissSheet: () -> Unit,
     onSaveTodo: (String) -> Unit,
     onRefresh: () -> Unit,
-    onToggleTaskStatus: (Int) -> Unit
+    onToggleTaskStatus: (Int) -> Unit,
+    onDeleteTask: (Int) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
 
@@ -82,8 +88,12 @@ fun HomeContent(
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(uiState.tasks) { task ->
-                        Card(task = task, onToggleStatus = onToggleTaskStatus)
+                    items(uiState.tasks, key = { it.id }) { task ->
+                        Card(
+                            task = task,
+                            onToggleStatus = onToggleTaskStatus,
+                            onDelete = onDeleteTask
+                        )
                     }
                 }
             }
@@ -117,7 +127,8 @@ fun HomeContentPreview() {
             onDismissSheet = {},
             onSaveTodo = {},
             onRefresh = {},
-            onToggleTaskStatus = {}
+            onToggleTaskStatus = {},
+            onDeleteTask = {}
         )
     }
 }

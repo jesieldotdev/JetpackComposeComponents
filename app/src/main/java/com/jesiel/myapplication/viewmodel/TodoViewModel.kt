@@ -28,6 +28,10 @@ class TodoViewModel : ViewModel() {
         fetchTodos()
     }
 
+    fun refresh() {
+        fetchTodos()
+    }
+
     private fun fetchTodos() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -41,23 +45,17 @@ class TodoViewModel : ViewModel() {
         }
     }
 
-    fun refresh() {
-        fetchTodos()
-    }
-
     fun addTodo(title: String) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val newId = (currentTasks.maxOfOrNull { it.id } ?: 0) + 1
             val newTask = Task(id = newId, title = title, done = false)
-
-            // Optimistic update
+            
             _uiState.update { it.copy(tasks = currentTasks + newTask) }
 
             try {
                 repository.updateTodos(_uiState.value.tasks)
             } catch (e: Exception) {
-                // Revert on error
                 _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
                 e.printStackTrace()
             }
@@ -70,6 +68,22 @@ class TodoViewModel : ViewModel() {
             val updatedTasks = currentTasks.map {
                 if (it.id == taskId) it.copy(done = !it.done) else it
             }
+
+            _uiState.update { it.copy(tasks = updatedTasks) }
+
+            try {
+                repository.updateTodos(updatedTasks)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun deleteTodo(taskId: Int) {
+        viewModelScope.launch {
+            val currentTasks = _uiState.value.tasks
+            val updatedTasks = currentTasks.filter { it.id != taskId }
 
             // Optimistic update
             _uiState.update { it.copy(tasks = updatedTasks) }

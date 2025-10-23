@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,11 +23,11 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -35,35 +36,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.ui.theme.myTodosTheme
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Card(task: Task, onToggleStatus: (Int) -> Unit) {
+fun Card(task: Task, onToggleStatus: (Int) -> Unit, onDelete: (Int) -> Unit) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
-            if (it == SwipeToDismissBoxValue.EndToStart || it == SwipeToDismissBoxValue.StartToEnd) {
-                onToggleStatus(task.id)
-                return@rememberSwipeToDismissBoxState false // Prevent dismissal, just trigger action
+            when (it) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onToggleStatus(task.id)
+                    return@rememberSwipeToDismissBoxState false // Do not dismiss
+                }
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete(task.id)
+                    return@rememberSwipeToDismissBoxState true // Dismiss after delete
+                }
+                else -> return@rememberSwipeToDismissBoxState false
             }
-            false
         },
         positionalThreshold = { it * .25f }
     )
 
-    // Reset the swipe state after the action is performed
-    LaunchedEffect(dismissState.currentValue) {
-        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
-            delay(500)
-            dismissState.reset()
-        }
-    }
-
     SwipeToDismissBox(
         state = dismissState,
-        backgroundContent = {
-            SwipeBackground(direction = dismissState.dismissDirection)
+        backgroundContent = { // Corrected: No parameter here
+            val direction = dismissState.dismissDirection
+            SwipeBackground(direction = direction)
         },
+        enableDismissFromStartToEnd = true,
+        enableDismissFromEndToStart = true
     ) {
         TaskContent(task = task)
     }
@@ -109,30 +110,32 @@ private fun TaskIndicator(isDone: Boolean) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeBackground(direction: SwipeToDismissBoxValue) {
-    val color by animateColorAsState(
-        targetValue = MaterialTheme.colorScheme.primaryContainer,
-        label = "swipeBackgroundColor"
-    )
-    val alignment = when (direction) {
-        SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-        else -> Alignment.Center
+    val (icon, alignment, color) = when (direction) {
+        SwipeToDismissBoxValue.StartToEnd -> Triple(Icons.Default.Check, Alignment.CenterStart, MaterialTheme.colorScheme.primaryContainer)
+        SwipeToDismissBoxValue.EndToStart -> Triple(Icons.Default.Delete, Alignment.CenterEnd, MaterialTheme.colorScheme.errorContainer)
+        else -> Triple(null, Alignment.Center, Color.Transparent)
     }
+
+    val animatedColor by animateColorAsState(targetValue = color, label = "swipeBackgroundColor")
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(16.dp))
-            .background(color)
+            .background(animatedColor)
             .padding(horizontal = 24.dp),
         contentAlignment = alignment
     ) {
-        Icon(
-            imageVector = Icons.Default.Check,
-            contentDescription = "Mark as done",
-            tint = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        icon?.let {
+            Icon(
+                imageVector = it,
+                contentDescription = null,
+                tint = if (direction == SwipeToDismissBoxValue.EndToStart) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
