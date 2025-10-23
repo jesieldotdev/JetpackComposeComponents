@@ -63,4 +63,24 @@ class TodoViewModel : ViewModel() {
             }
         }
     }
+
+    fun toggleTaskStatus(taskId: Int) {
+        viewModelScope.launch {
+            val currentTasks = _uiState.value.tasks
+            val updatedTasks = currentTasks.map {
+                if (it.id == taskId) it.copy(done = !it.done) else it
+            }
+
+            // Optimistic update
+            _uiState.update { it.copy(tasks = updatedTasks) }
+
+            try {
+                repository.updateTodos(updatedTasks)
+            } catch (e: Exception) {
+                // Revert on error
+                _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
+                e.printStackTrace()
+            }
+        }
+    }
 }

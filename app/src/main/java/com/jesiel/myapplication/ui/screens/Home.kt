@@ -46,7 +46,8 @@ fun HomeScreen(
         showSheet = showSheet,
         onDismissSheet = onDismissSheet,
         onSaveTodo = { title -> todoViewModel.addTodo(title) },
-        onRefresh = { todoViewModel.refresh() }
+        onRefresh = { todoViewModel.refresh() },
+        onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) }
     )
 }
 
@@ -57,7 +58,8 @@ fun HomeContent(
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
     onSaveTodo: (String) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onToggleTaskStatus: (Int) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
 
@@ -82,7 +84,7 @@ fun HomeContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(uiState.tasks) { task ->
-                            Card(task)
+                            Card(task = task, onToggleStatus = onToggleTaskStatus)
                         }
                     }
                 }
@@ -115,6 +117,7 @@ fun HomeContentPreview() {
         showSheet = false,
         onDismissSheet = {},
         onSaveTodo = {},
-        onRefresh = {}
+        onRefresh = {},
+        onToggleTaskStatus = {}
     )
 }

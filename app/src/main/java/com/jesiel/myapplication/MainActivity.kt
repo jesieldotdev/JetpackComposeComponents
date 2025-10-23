@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,7 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -33,7 +31,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             myTodosTheme(
-                dynamicColor = true
+                dynamicColor = true // Enabled Material You
             ) {
                 var showSheet by remember { mutableStateOf(false) }
                 Scaffold(
@@ -41,8 +39,6 @@ class MainActivity : ComponentActivity() {
                     floatingActionButton = {
                         FloatingActionButton(
                             onClick = { showSheet = true },
-                            containerColor = MaterialTheme.colorScheme.primary
-
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
@@ -50,11 +46,11 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     },
-                    ) { innerPadding ->
+                ) { innerPadding ->
                     AppNavigation(
                         modifier = Modifier.padding(innerPadding),
-                        showSheet=showSheet,
-                        onDismissSheet={ showSheet = false }
+                        showSheet = showSheet,
+                        onDismissSheet = { showSheet = false }
 
                     )
                 }
@@ -77,21 +73,8 @@ fun AppNavigation(
     ) {
         composable("login") { LoginScreen(navController) }
         composable("home") { HomeScreen(
-//            navController,
-            showSheet,
-            onDismissSheet
+            showSheet = showSheet,
+            onDismissSheet = onDismissSheet
         ) }
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun AppNavigationPreview() {
-//    myTodosTheme(
-//        dynamicColor = false,
-//    ) {
-//        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//            AppNavigation(modifier = Modifier.padding(innerPadding))
-//        }
-//    }
-//}
