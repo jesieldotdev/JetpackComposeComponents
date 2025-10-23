@@ -37,7 +37,8 @@ fun HomeScreen(
     HomeContent(
         tasks = tasks,
         showSheet = showSheet,
-        onDismissSheet = onDismissSheet
+        onDismissSheet = onDismissSheet,
+        onSaveTodo = { title -> todoViewModel.addTodo(title) }
     )
 }
 
@@ -45,7 +46,8 @@ fun HomeScreen(
 fun HomeContent(
     tasks: List<Task>,
     showSheet: Boolean,
-    onDismissSheet: () -> Unit
+    onDismissSheet: () -> Unit,
+    onSaveTodo: (String) -> Unit
 ) {
     myTodosTheme(dynamicColor = false) {
         Column(
@@ -59,7 +61,7 @@ fun HomeContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Header()
-//                Week()
+                Week()
                 Spacer(modifier = Modifier.height(16.dp))
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -70,8 +72,9 @@ fun HomeContent(
                 }
 
                 ExampleBottomSheet(
-                    showSheet,
-                    onDismissSheet
+                    showSheet = showSheet,
+                    onDismissSheet = onDismissSheet,
+                    onSave = onSaveTodo
                 )
             }
         }
@@ -93,5 +96,5 @@ fun HomeContentPreview() {
             done = true
         ),
     )
-    HomeContent(tasks = sampleTasks, showSheet = false, onDismissSheet = {})
+    HomeContent(tasks = sampleTasks, showSheet = false, onDismissSheet = {}, onSaveTodo = {})
 }

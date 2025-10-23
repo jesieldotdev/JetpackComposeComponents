@@ -6,4 +6,8 @@ class TodoRepository {
     suspend fun getTodos(): List<Task> {
         return apiService.getTodos().record.todos
     }
+
+    suspend fun updateTodos(todos: List<Task>) {
+        apiService.updateTodos(TodoRecord(todos = todos))
+    }
 }
