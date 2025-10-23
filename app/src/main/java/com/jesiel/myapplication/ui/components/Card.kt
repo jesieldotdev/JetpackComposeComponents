@@ -14,14 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jesiel.myapplication.ui.screens.Task
-import com.jesiel.myapplication.ui.theme.Grey60
+import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.ui.theme.myTodosTheme
 
 @Composable
@@ -29,16 +26,10 @@ fun Card(task: Task) {
 
     Column(
         modifier = Modifier
-//            .shadow(
-//                2.dp,
-//                shape = RoundedCornerShape(2.dp)
-//            )
             .clip(RoundedCornerShape(16.dp))
-
             .fillMaxWidth()
             .background(if (task.done) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
-            .padding(
-                32.dp, 8.dp)
+            .padding(16.dp)
 
     ) {
         Row(
@@ -46,23 +37,9 @@ fun Card(task: Task) {
         ) {
             Text(
                 text = task.title,
-                fontWeight = FontWeight.W800,
+                fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 color = if (task.done) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(
-                text = task.createdAt,
-                color = if(task.done) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-
-            Text(
-                text = task.text,
-                color = if(task.done) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondary
             )
         }
     }
@@ -72,23 +49,21 @@ fun Card(task: Task) {
 @Composable
 fun CardPreview() {
     myTodosTheme(dynamicColor = false) {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Card(
                 Task(
-                title = "Wakeup",
-                text = "Early from bed and fresh",
-                done = false,
-                createdAt = "13:00"
-            ))
-            Spacer(modifier = Modifier.height(8.dp))
-            Task(
-                title = "Morning exercises",
-                text = "4 types of exercise",
-                done = true,
-                createdAt = "16:00"
+                    id = 1,
+                    title = "Wakeup",
+                    done = false
+                )
+            )
+            Card(
+                Task(
+                    id = 2,
+                    title = "Morning exercises",
+                    done = true
+                )
             )
         }
     }
-
-
 }
