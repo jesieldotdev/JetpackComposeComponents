@@ -1,9 +1,5 @@
 package com.jesiel.myapplication.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,14 +11,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,33 +40,61 @@ import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.ui.components.Card
 import com.jesiel.myapplication.ui.components.ExampleBottomSheet
 import com.jesiel.myapplication.ui.components.Header
-import com.jesiel.myapplication.ui.components.Week
 import com.jesiel.myapplication.ui.theme.myTodosTheme
 import com.jesiel.myapplication.viewmodel.TodoUiState
 import com.jesiel.myapplication.viewmodel.TodoViewModel
+import com.jesiel.myapplication.viewmodel.UiEvent
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun HomeScreen(
-    showSheet: Boolean,
-    onDismissSheet: () -> Unit,
-    todoViewModel: TodoViewModel = viewModel()
-) {
+fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
     val uiState by todoViewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var showSheet by remember { mutableStateOf(false) }
 
-    HomeContent(
-        uiState = uiState,
-        showSheet = showSheet,
-        onDismissSheet = onDismissSheet,
-        onSaveTodo = { title -> todoViewModel.addTodo(title) },
-        onRefresh = { todoViewModel.refresh() },
-        onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
-        onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) }
-    )
+    LaunchedEffect(key1 = true) {
+        todoViewModel.eventFlow.collectLatest { event ->
+            when (event) {
+                is UiEvent.ShowUndoSnackbar -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = "Tarefa removida",
+                        actionLabel = "Desfazer"
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        todoViewModel.undoDelete(event.task)
+                    } else {
+                        todoViewModel.confirmDeletion()
+                    }
+                }
+            }
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showSheet = true }) {
+                Icon(Icons.Default.Add, contentDescription = "Adicionar Tarefa")
+            }
+        }
+    ) { innerPadding ->
+        HomeContent(
+            modifier = Modifier.padding(innerPadding),
+            uiState = uiState,
+            showSheet = showSheet,
+            onDismissSheet = { showSheet = false },
+            onSaveTodo = { title -> todoViewModel.addTodo(title) },
+            onRefresh = { todoViewModel.refresh() },
+            onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
+            onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeContent(
+    modifier: Modifier = Modifier,
     uiState: TodoUiState,
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
@@ -70,7 +106,7 @@ fun HomeContent(
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .pullRefresh(pullRefreshState)
@@ -82,8 +118,6 @@ fun HomeContent(
                 Modifier.padding(16.dp)
             ) {
                 Header()
-                Spacer(modifier = Modifier.height(16.dp))
-                Week()
                 Spacer(modifier = Modifier.height(16.dp))
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)

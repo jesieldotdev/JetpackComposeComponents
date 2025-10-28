@@ -17,7 +17,7 @@ import java.time.format.TextStyle
 fun getFormattedDate(): String {
     val currentDate = LocalDate.now()
     val locale = java.util.Locale("pt", "BR")
-    val formatter = DateTimeFormatter.ofPattern("d, MMM de yyyy", locale)
+    val formatter = DateTimeFormatter.ofPattern("d/MM/yyyy", locale)
     return currentDate.format(formatter).replaceFirstChar { it.uppercase() }
 }
 
