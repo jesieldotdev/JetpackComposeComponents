@@ -3,6 +3,7 @@ package com.jesiel.myapplication.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,7 +60,12 @@ fun String.toColor(): Color {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Card(task: Task, onToggleStatus: (Int) -> Unit, onDelete: (Int) -> Unit) {
+fun Card(
+    task: Task, 
+    onToggleStatus: (Int) -> Unit, 
+    onDelete: (Int) -> Unit,
+    onClick: () -> Unit // Added missing onClick parameter
+) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
             when (it) {
@@ -120,14 +126,22 @@ fun Card(task: Task, onToggleStatus: (Int) -> Unit, onDelete: (Int) -> Unit) {
         enableDismissFromStartToEnd = true,
         enableDismissFromEndToStart = true
     ) {
-        TaskContent(task = task, onToggleStatus = onToggleStatus)
+        TaskContent(
+            task = task, 
+            onToggleStatus = onToggleStatus,
+            modifier = Modifier.clickable { onClick() } // Make content clickable
+        )
     }
 }
 
 @Composable
-private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
+private fun TaskContent(
+    task: Task, 
+    onToggleStatus: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f))
@@ -256,7 +270,8 @@ fun CardPreview() {
                     reminder = System.currentTimeMillis() + 3600000
                 ),
                 onToggleStatus = {},
-                onDelete = {}
+                onDelete = {},
+                onClick = {}
             )
         }
     }

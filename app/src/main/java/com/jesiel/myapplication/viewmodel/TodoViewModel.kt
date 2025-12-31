@@ -87,7 +87,6 @@ class TodoViewModel : ViewModel() {
 
             _uiState.update { it.copy(tasks = currentTasks + newTask) }
 
-            // Schedule notification if reminder exists
             reminder?.let { time ->
                 if (time > System.currentTimeMillis()) {
                     scheduleNotification(context, time, title, description, newId)
@@ -96,6 +95,40 @@ class TodoViewModel : ViewModel() {
 
             try {
                 repository.updateTodos(_uiState.value.tasks)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateTask(context: Context, taskId: Int, title: String, description: String?, category: String?, color: String?, reminder: Long?) {
+        viewModelScope.launch {
+            val currentTasks = _uiState.value.tasks
+            val updatedTasks = currentTasks.map {
+                if (it.id == taskId) {
+                    it.copy(
+                        title = title,
+                        description = description,
+                        category = category,
+                        color = color,
+                        reminder = reminder
+                    )
+                } else it
+            }
+
+            _uiState.update { it.copy(tasks = updatedTasks) }
+
+            // Update notification
+            cancelNotification(context, taskId)
+            reminder?.let { time ->
+                if (time > System.currentTimeMillis()) {
+                    scheduleNotification(context, time, title, description, taskId)
+                }
+            }
+
+            try {
+                repository.updateTodos(updatedTasks)
             } catch (e: Exception) {
                 _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
                 e.printStackTrace()
@@ -133,14 +166,42 @@ class TodoViewModel : ViewModel() {
         )
     }
 
-    fun toggleTaskStatus(taskId: Int) {
+    private fun cancelNotification(context: Context, id: Int) {
+        val intent = Intent(context, ReminderReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(pendingIntent)
+    }
+
+    fun toggleTaskStatus(context: Context, taskId: Int) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
+            var isNowDone = false
             val updatedTasks = currentTasks.map {
-                if (it.id == taskId) it.copy(done = !it.done) else it
+                if (it.id == taskId) {
+                    isNowDone = !it.done
+                    it.copy(done = isNowDone)
+                } else it
             }
 
             _uiState.update { it.copy(tasks = updatedTasks) }
+
+            if (isNowDone) {
+                cancelNotification(context, taskId)
+            } else {
+                // If unchecking, re-schedule if reminder is in the future
+                val task = updatedTasks.find { it.id == taskId }
+                task?.reminder?.let { time ->
+                    if (time > System.currentTimeMillis()) {
+                        scheduleNotification(context, time, task.title, task.description, taskId)
+                    }
+                }
+            }
 
             try {
                 repository.updateTodos(updatedTasks)

@@ -27,11 +27,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,7 +66,10 @@ import com.jesiel.myapplication.viewmodel.UiEvent
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
+fun HomeScreen(
+    todoViewModel: TodoViewModel = viewModel(),
+    onNavigateToDetail: (Int) -> Unit = {}
+) {
     val uiState by todoViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -122,8 +125,9 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
                 todoViewModel.addTodo(context, title, desc, cat, color, reminder)
             },
             onRefresh = { todoViewModel.refresh() },
-            onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
+            onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(context, taskId) }, // Pass context here
             onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) },
+            onTaskClick = onNavigateToDetail,
             contentPadding = innerPadding
         )
     }
@@ -139,6 +143,7 @@ fun HomeContent(
     onRefresh: () -> Unit,
     onToggleTaskStatus: (Int) -> Unit,
     onDeleteTask: (Int) -> Unit,
+    onTaskClick: (Int) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
@@ -224,7 +229,8 @@ fun HomeContent(
                         Card(
                             task = task,
                             onToggleStatus = onToggleTaskStatus,
-                            onDelete = onDeleteTask
+                            onDelete = onDeleteTask,
+                            onClick = { onTaskClick(task.id) }
                         )
                     }
                 }
@@ -260,7 +266,8 @@ fun HomeContentPreview() {
             onSaveTodo = { _, _, _, _, _ -> },
             onRefresh = {},
             onToggleTaskStatus = {},
-            onDeleteTask = {}
+            onDeleteTask = {},
+            onTaskClick = {}
         )
     }
 }

@@ -6,17 +6,10 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
@@ -27,7 +20,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.viewmodel.ReminderReceiver
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -38,6 +33,7 @@ import java.util.Calendar
 fun ExampleBottomSheet(
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
+    initialTask: Task? = null, // Task to pre-fill the form for editing
     onSave: (String, String?, String?, String?, Long?) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -47,9 +43,28 @@ fun ExampleBottomSheet(
     
     val colors = listOf("#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3", "#33FFF3")
     var selectedColor by remember { mutableStateOf(colors[0]) }
-
     var reminderTime by remember { mutableStateOf<Long?>(null) }
+    
     val context = LocalContext.current
+
+    // Pre-fill fields when an initial task is provided
+    LaunchedEffect(initialTask, showSheet) {
+        if (showSheet) {
+            if (initialTask != null) {
+                title = initialTask.title
+                description = initialTask.description ?: ""
+                category = initialTask.category ?: ""
+                selectedColor = initialTask.color ?: colors[0]
+                reminderTime = initialTask.reminder
+            } else {
+                title = ""
+                description = ""
+                category = ""
+                selectedColor = colors[0]
+                reminderTime = null
+            }
+        }
+    }
 
     if (showSheet) {
         ModalBottomSheet(
@@ -60,9 +75,10 @@ fun ExampleBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
+                    .verticalScroll(rememberScrollState()) // Ensure content is scrollable
             ) {
                 Text(
-                    text = "Nova Tarefa",
+                    text = if (initialTask == null) "Nova Tarefa" else "Editar Tarefa",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -93,12 +109,14 @@ fun ExampleBottomSheet(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Reminder Selector
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
                             val currentDateTime = Calendar.getInstance()
+                            if (reminderTime != null) {
+                                currentDateTime.timeInMillis = reminderTime!!
+                            }
                             DatePickerDialog(
                                 context,
                                 { _, year, month, day ->
@@ -109,6 +127,14 @@ fun ExampleBottomSheet(
                                                 set(year, month, day, hour, minute)
                                             }
                                             reminderTime = calendar.timeInMillis
+                                            
+                                            // Quick confirmation notification
+                                            val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(reminderTime!!), ZoneId.systemDefault())
+                                            val formattedTime = ldt.format(DateTimeFormatter.ofPattern("dd/MM 'às' HH:mm"))
+                                            val testIntent = Intent(context, ReminderReceiver::class.java).apply {
+                                                putExtra("task_title", "Lembrete definido para $formattedTime")
+                                            }
+                                            context.sendBroadcast(testIntent)
                                         },
                                         currentDateTime.get(Calendar.HOUR_OF_DAY),
                                         currentDateTime.get(Calendar.MINUTE),
@@ -168,16 +194,6 @@ fun ExampleBottomSheet(
                 Button(
                     onClick = {
                         if (title.isNotBlank()) {
-                            // If there's a reminder, send an immediate notification to confirm
-                            reminderTime?.let { time ->
-                                val ldt = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(time), ZoneId.systemDefault())
-                                val formattedTime = ldt.format(DateTimeFormatter.ofPattern("dd/MM 'às' HH:mm"))
-                                val testIntent = Intent(context, ReminderReceiver::class.java).apply {
-                                    putExtra("task_title", "Lembrete agendado para $formattedTime")
-                                }
-                                context.sendBroadcast(testIntent)
-                            }
-
                             onSave(
                                 title, 
                                 if (description.isBlank()) null else description,
@@ -185,16 +201,12 @@ fun ExampleBottomSheet(
                                 selectedColor,
                                 reminderTime
                             )
-                            title = ""
-                            description = ""
-                            category = ""
-                            reminderTime = null
                             onDismissSheet()
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Salvar")
+                    Text(if (initialTask == null) "Salvar" else "Atualizar")
                 }
                 Spacer(modifier = Modifier.height(32.dp))
             }
