@@ -32,12 +32,13 @@ fun Header() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = getFormattedDate(),
-            color = MaterialTheme.colorScheme.onSurfaceVariant // Corrected color for better contrast
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f) // Subtitle color
         )
         Text(
             text = getDayOfWeekText(),
             fontWeight = FontWeight.Bold,
             fontSize = 32.sp,
+            color = MaterialTheme.colorScheme.onSurface // Adapts to light/dark for better contrast
         )
     }
 }

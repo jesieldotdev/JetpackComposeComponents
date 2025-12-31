@@ -42,11 +42,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.jesiel.myapplication.data.Task
@@ -84,6 +84,7 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
     }
 
     Scaffold(
+        containerColor = Color.Transparent, // Permite ver a imagem atrás do Scaffold
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = { showSheet = true }) {
@@ -92,14 +93,14 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
         }
     ) { innerPadding ->
         HomeContent(
-            modifier = Modifier.padding(innerPadding),
             uiState = uiState,
             showSheet = showSheet,
             onDismissSheet = { showSheet = false },
             onSaveTodo = { title, desc, cat, color -> todoViewModel.addTodo(title, desc, cat, color) },
             onRefresh = { todoViewModel.refresh() },
             onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
-            onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) }
+            onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) },
+            contentPadding = innerPadding // Passa o padding do sistema para o conteúdo
         )
     }
 }
@@ -107,25 +108,23 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeContent(
-    modifier: Modifier = Modifier,
     uiState: TodoUiState,
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
     onSaveTodo: (String, String?, String?, String?) -> Unit,
     onRefresh: () -> Unit,
     onToggleTaskStatus: (Int) -> Unit,
-    onDeleteTask: (Int) -> Unit
+    onDeleteTask: (Int) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
     val randomBackgroundImage = remember { "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}" }
     
-    // Get unique categories from tasks
     val categories = remember(uiState.tasks) {
         listOf("Tudo") + uiState.tasks.mapNotNull { it.category }.distinct()
     }
     var selectedCategory by remember { mutableStateOf("Tudo") }
 
-    // Filter tasks based on selected category
     val filteredTasks = remember(uiState.tasks, selectedCategory) {
         if (selectedCategory == "Tudo") {
             uiState.tasks
@@ -135,7 +134,7 @@ fun HomeContent(
     }
 
     Box(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .pullRefresh(pullRefreshState)
     ) {
@@ -157,12 +156,15 @@ fun HomeContent(
         if (uiState.isLoading && uiState.tasks.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding) // Aplica o padding do sistema apenas ao conteúdo textual/lista
+            ) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
                     Header()
                 }
                 
-                // Category Filter Bar
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
