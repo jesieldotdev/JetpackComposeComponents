@@ -1,15 +1,20 @@
 package com.jesiel.myapplication.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -24,6 +29,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,9 +41,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.jesiel.myapplication.data.Task
@@ -107,15 +117,28 @@ fun HomeContent(
     onDeleteTask: (Int) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
-    // Random image URL that refreshes on each unique remember key (or app launch)
     val randomBackgroundImage = remember { "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}" }
+    
+    // Get unique categories from tasks
+    val categories = remember(uiState.tasks) {
+        listOf("Tudo") + uiState.tasks.mapNotNull { it.category }.distinct()
+    }
+    var selectedCategory by remember { mutableStateOf("Tudo") }
+
+    // Filter tasks based on selected category
+    val filteredTasks = remember(uiState.tasks, selectedCategory) {
+        if (selectedCategory == "Tudo") {
+            uiState.tasks
+        } else {
+            uiState.tasks.filter { it.category == selectedCategory }
+        }
+    }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .pullRefresh(pullRefreshState)
     ) {
-        // Background Image with Blur
         AsyncImage(
             model = randomBackgroundImage,
             contentDescription = null,
@@ -125,7 +148,6 @@ fun HomeContent(
             contentScale = ContentScale.Crop
         )
         
-        // Dark/Light Scrim to ensure readability
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -135,15 +157,44 @@ fun HomeContent(
         if (uiState.isLoading && uiState.tasks.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
-            Column(
-                Modifier.padding(16.dp)
-            ) {
-                Header()
-                Spacer(modifier = Modifier.height(16.dp))
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            Column {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+                    Header()
+                }
+                
+                // Category Filter Bar
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(uiState.tasks, key = { it.id }) { task ->
+                    items(categories) { category ->
+                        val isSelected = category == selectedCategory
+                        Surface(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable { selectedCategory = category },
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        ) {
+                            Text(
+                                text = category,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyColumn(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    items(filteredTasks, key = { it.id }) { task ->
                         Card(
                             task = task,
                             onToggleStatus = onToggleTaskStatus,
@@ -173,8 +224,8 @@ fun HomeContent(
 fun HomeContentPreview() {
     myTodosTheme {
         val sampleTasks = listOf(
-            Task(id = 1, title = "Wakeup", done = false),
-            Task(id = 2, title = "Morning exercises", done = true),
+            Task(id = 1, title = "Wakeup", category = "Rotina", done = false),
+            Task(id = 2, title = "Morning exercises", category = "Saúde", done = true),
         )
         HomeContent(
             uiState = TodoUiState(tasks = sampleTasks),
