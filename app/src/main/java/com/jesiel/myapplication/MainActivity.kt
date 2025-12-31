@@ -21,6 +21,7 @@ import androidx.navigation.navArgument
 import com.jesiel.myapplication.ui.screens.AboutScreen
 import com.jesiel.myapplication.ui.screens.HomeScreen
 import com.jesiel.myapplication.ui.screens.LoginScreen
+import com.jesiel.myapplication.ui.screens.SettingsScreen
 import com.jesiel.myapplication.ui.screens.TaskDetailScreen
 import com.jesiel.myapplication.ui.theme.myTodosTheme
 import com.jesiel.myapplication.viewmodel.TodoViewModel
@@ -103,8 +104,10 @@ fun AppNavigation() {
         }
 
         composable("settings") {
-            // Placeholder for Settings Screen
-            // You can create a SettingsScreen.kt later
+            SettingsScreen(
+                backgroundImageUrl = uiState.backgroundImageUrl,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }
