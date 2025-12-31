@@ -9,6 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -16,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.jesiel.myapplication.ui.screens.AboutScreen
 import com.jesiel.myapplication.ui.screens.HomeScreen
 import com.jesiel.myapplication.ui.screens.LoginScreen
 import com.jesiel.myapplication.ui.screens.TaskDetailScreen
@@ -56,22 +59,30 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    // Sharing the ViewModel across screens
     val todoViewModel: TodoViewModel = viewModel()
+    val uiState by todoViewModel.uiState.collectAsState()
 
     NavHost(
         navController = navController,
         startDestination = "home",
     ) {
         composable("login") { LoginScreen(navController) }
+        
         composable("home") { 
             HomeScreen(
                 todoViewModel = todoViewModel,
                 onNavigateToDetail = { taskId -> 
                     navController.navigate("detail/$taskId") 
+                },
+                onNavigateToAbout = {
+                    navController.navigate("about")
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
                 }
             ) 
         }
+        
         composable(
             route = "detail/{taskId}",
             arguments = listOf(navArgument("taskId") { type = NavType.IntType })
@@ -82,6 +93,18 @@ fun AppNavigation() {
                 todoViewModel = todoViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
+        }
+
+        composable("about") {
+            AboutScreen(
+                backgroundImageUrl = uiState.backgroundImageUrl,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("settings") {
+            // Placeholder for Settings Screen
+            // You can create a SettingsScreen.kt later
         }
     }
 }
