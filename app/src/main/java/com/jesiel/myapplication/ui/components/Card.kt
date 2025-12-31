@@ -1,14 +1,20 @@
 package com.jesiel.myapplication.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -36,6 +42,15 @@ import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.ui.theme.myTodosTheme
 
+// Helper to convert hex string to Color
+fun String.toColor(): Color {
+    return try {
+        Color(android.graphics.Color.parseColor(this))
+    } catch (e: Exception) {
+        Color.Transparent
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Card(task: Task, onToggleStatus: (Int) -> Unit, onDelete: (Int) -> Unit) {
@@ -44,11 +59,11 @@ fun Card(task: Task, onToggleStatus: (Int) -> Unit, onDelete: (Int) -> Unit) {
             when (it) {
                 SwipeToDismissBoxValue.StartToEnd -> {
                     onToggleStatus(task.id)
-                    return@rememberSwipeToDismissBoxState false // Do not dismiss
+                    return@rememberSwipeToDismissBoxState false
                 }
                 SwipeToDismissBoxValue.EndToStart -> {
                     onDelete(task.id)
-                    return@rememberSwipeToDismissBoxState true // Dismiss after delete
+                    return@rememberSwipeToDismissBoxState true
                 }
                 else -> return@rememberSwipeToDismissBoxState false
             }
@@ -110,18 +125,29 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
+        // Color indicator stripe
+        Box(
+            modifier = Modifier
+                .width(6.dp)
+                .height(80.dp) // Approximate height, adapts to content
+                .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                .background(task.color?.toColor() ?: Color.Transparent)
+        )
+
         Checkbox(
             checked = task.done,
-            onCheckedChange = { onToggleStatus(task.id) }
+            onCheckedChange = { onToggleStatus(task.id) },
+            modifier = Modifier.padding(start = 8.dp)
         )
 
         Column (
             modifier = Modifier
-                .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 16.dp),
+                .weight(1f)
+                .padding(start = 8.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start
         ){
@@ -145,14 +171,37 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
                     )
                 }
             }
-            task.created?.let {
-                Text(
-                    text = it,
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                    fontWeight = FontWeight.Normal,
-                    textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
-                )
+            Row(
+                modifier = Modifier.padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                task.created?.let {
+                    Text(
+                        text = it,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        fontWeight = FontWeight.Normal,
+                        textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
+                    )
+                }
+                if (task.category != null && task.category.isNotBlank()) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer,
+                                shape = CircleShape
+                            )
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = task.category,
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }
@@ -169,7 +218,9 @@ fun CardPreview() {
                     title = "Wakeup",
                     description = "This is a sample description for the task.",
                     done = false,
-                    created = "07:00"
+                    created = "Oct 23, 07:00",
+                    category = "Rotina",
+                    color = "#FF5733"
                 ),
                 onToggleStatus = {},
                 onDelete = {}
@@ -180,7 +231,9 @@ fun CardPreview() {
                     title = "Morning exercises",
                     description = null,
                     done = true,
-                    created = "08:30"
+                    created = "Oct 23, 08:30",
+                    category = "Saúde",
+                    color = "#33FF57"
                 ),
                 onToggleStatus = {},
                 onDelete = {}

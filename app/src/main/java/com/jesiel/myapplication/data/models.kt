@@ -18,6 +18,8 @@ data class Task(
     val id: Int,
     val title: String,
     val description: String? = null,
+    val category: String? = null,
+    val color: String? = null,
     val done: Boolean,
     @SerialName("Created")
     val created: String? = null

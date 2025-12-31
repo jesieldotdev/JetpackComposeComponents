@@ -11,8 +11,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalTime
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 // Represents the state of the UI
 data class TodoUiState(
@@ -59,18 +60,21 @@ class TodoViewModel : ViewModel() {
         }
     }
 
-    fun addTodo(title: String, description: String?) {
+    fun addTodo(title: String, description: String?, category: String?, color: String?) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val newId = (currentTasks.maxOfOrNull { it.id } ?: 0) + 1
             
-            // Get current time formatted as HH:mm
-            val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+            // Format current date and time: "Oct 23, 18:30"
+            val formatter = DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale("pt", "BR"))
+            val currentTime = LocalDateTime.now().format(formatter).replaceFirstChar { it.uppercase() }
             
             val newTask = Task(
                 id = newId, 
                 title = title, 
                 description = description,
+                category = category,
+                color = color,
                 done = false, 
                 created = currentTime
             )
