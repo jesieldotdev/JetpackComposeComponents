@@ -2,15 +2,7 @@ package com.jesiel.myapplication.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -19,38 +11,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -66,16 +46,20 @@ import com.jesiel.myapplication.viewmodel.TodoViewModel
 import com.jesiel.myapplication.viewmodel.UiEvent
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     todoViewModel: TodoViewModel = viewModel(),
-    onNavigateToDetail: (Int) -> Unit = {}
+    onNavigateToDetail: (Int) -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {}
 ) {
     val uiState by todoViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     LaunchedEffect(Unit) {
         todoViewModel.eventFlow.collect { event ->
@@ -98,40 +82,130 @@ fun HomeScreen(
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    actionColor = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.padding(12.dp)
-                )
+    // Wrap the drawer in a provider to flip its direction to Right (RTL)
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                // Inside the drawer, restore Left-to-Right direction for content
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                    ModalDrawerSheet(
+                        drawerContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+                        // Rounded corners on the LEFT side because it opens from the right
+                        drawerShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp),
+                        modifier = Modifier.width(300.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp)
+                        ) {
+                            Text(
+                                text = "myTodos",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "Gerencie sua rotina com elegância",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp), 
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        DrawerItem(
+                            label = "Configurações",
+                            icon = Icons.Default.Settings,
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                onNavigateToSettings()
+                            }
+                        )
+                        
+                        DrawerItem(
+                            label = "Sobre",
+                            icon = Icons.Default.Info,
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                onNavigateToAbout()
+                            }
+                        )
+                    }
+                }
             }
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showSheet = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Adicionar Tarefa")
+        ) {
+            // Restore Left-to-Right direction for the main app content
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Scaffold(
+                    containerColor = Color.Transparent,
+                    snackbarHost = {
+                        SnackbarHost(snackbarHostState) { data ->
+                            Snackbar(
+                                snackbarData = data,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                actionColor = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
+                    },
+                    floatingActionButton = {
+                        FloatingActionButton(
+                            onClick = { showSheet = true },
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = "Adicionar Tarefa")
+                        }
+                    }
+                ) { innerPadding ->
+                    HomeContent(
+                        uiState = uiState,
+                        showSheet = showSheet,
+                        onDismissSheet = { showSheet = false },
+                        onSaveTodo = { title, desc, cat, color, reminder ->
+                            todoViewModel.addTodo(context, title, desc, cat, color, reminder)
+                        },
+                        onRefresh = { todoViewModel.refresh() },
+                        onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(context, taskId) },
+                        onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) },
+                        onTaskClick = onNavigateToDetail,
+                        onMenuClick = { scope.launch { drawerState.open() } },
+                        contentPadding = innerPadding
+                    )
+                }
             }
         }
-    ) { innerPadding ->
-        HomeContent(
-            uiState = uiState,
-            showSheet = showSheet,
-            onDismissSheet = { showSheet = false },
-            onSaveTodo = { title, desc, cat, color, reminder ->
-                todoViewModel.addTodo(context, title, desc, cat, color, reminder)
-            },
-            onRefresh = { todoViewModel.refresh() },
-            onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(context, taskId) },
-            onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) },
-            onTaskClick = onNavigateToDetail,
-            contentPadding = innerPadding
-        )
     }
+}
+
+@Composable
+private fun DrawerItem(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    NavigationDrawerItem(
+        label = { Text(text = label, fontWeight = FontWeight.Medium) },
+        selected = false,
+        onClick = onClick,
+        icon = { Icon(imageVector = icon, contentDescription = null) },
+        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+        colors = NavigationDrawerItemDefaults.colors(
+            unselectedContainerColor = Color.Transparent,
+            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -145,6 +219,7 @@ fun HomeContent(
     onToggleTaskStatus: (Int) -> Unit,
     onDeleteTask: (Int) -> Unit,
     onTaskClick: (Int) -> Unit,
+    onMenuClick: () -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
@@ -168,12 +243,11 @@ fun HomeContent(
             .fillMaxSize()
             .pullRefresh(pullRefreshState)
     ) {
-        // Corrected: Use image from state and enable disk caching
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(uiState.backgroundImageUrl)
                 .crossfade(true)
-                .diskCacheKey(uiState.backgroundImageUrl) // Fixed key for caching
+                .diskCacheKey(uiState.backgroundImageUrl)
                 .memoryCacheKey(uiState.backgroundImageUrl)
                 .build(),
             contentDescription = null,
@@ -197,10 +271,33 @@ fun HomeContent(
                     .fillMaxSize()
                     .padding(contentPadding)
             ) {
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Header()
+                    Surface(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .clickable { onMenuClick() },
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                        tonalElevation = 4.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.Menu, 
+                                contentDescription = "Menu",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
                 }
-
+                
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -235,7 +332,7 @@ fun HomeContent(
                     items(filteredTasks, key = { it.id }) { task ->
                         Card(
                             task = task,
-                            onToggleStatus = onToggleTaskStatus,
+                            onToggleStatus = { taskId -> onToggleTaskStatus(taskId) },
                             onDelete = onDeleteTask,
                             onClick = { onTaskClick(task.id) }
                         )
@@ -274,7 +371,8 @@ fun HomeContentPreview() {
             onRefresh = {},
             onToggleTaskStatus = {},
             onDeleteTask = {},
-            onTaskClick = {}
+            onTaskClick = {},
+            onMenuClick = {}
         )
     }
 }

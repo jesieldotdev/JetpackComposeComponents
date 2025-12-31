@@ -1,7 +1,6 @@
 package com.jesiel.myapplication.ui.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,8 +27,8 @@ fun getDayOfWeekText(): String {
 }
 
 @Composable
-fun Header() {
-    Column(modifier = Modifier.fillMaxWidth()) {
+fun Header(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         Text(
             text = getFormattedDate(),
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f) // Subtitle color

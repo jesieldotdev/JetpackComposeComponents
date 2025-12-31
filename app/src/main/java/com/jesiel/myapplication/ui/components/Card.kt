@@ -4,38 +4,20 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,7 +46,7 @@ fun Card(
     task: Task, 
     onToggleStatus: (Int) -> Unit, 
     onDelete: (Int) -> Unit,
-    onClick: () -> Unit // Added missing onClick parameter
+    onClick: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
@@ -113,8 +95,8 @@ fun Card(
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(color)
                     .clip(RoundedCornerShape(16.dp))
+                    .background(color)
                     .padding(horizontal = 24.dp),
                 contentAlignment = alignment
             ) {
@@ -129,7 +111,7 @@ fun Card(
         TaskContent(
             task = task, 
             onToggleStatus = onToggleStatus,
-            modifier = Modifier.clickable { onClick() } // Make content clickable
+            modifier = Modifier.clickable { onClick() }
         )
     }
 }
@@ -140,112 +122,110 @@ private fun TaskContent(
     onToggleStatus: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f))
-            .padding(end = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
+            .clip(RoundedCornerShape(16.dp)),
+        color = MaterialTheme.colorScheme.surfaceVariant, // Solid color for better visibility
+        tonalElevation = 2.dp, // Adds distinct Material 3 look
     ) {
-        // Color indicator stripe
-        Box(
-            modifier = Modifier
-                .width(6.dp)
-                .height(80.dp)
-                .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
-                .background(task.color?.toColor() ?: Color.Transparent)
-        )
-
-        Checkbox(
-            checked = task.done,
-            onCheckedChange = { onToggleStatus(task.id) },
-            modifier = Modifier.padding(start = 8.dp)
-        )
-
-        Column (
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 8.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ){
-            Text(
-                text = task.title,
-                fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-                textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
+        Row(
+            modifier = Modifier.padding(end = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Color indicator stripe
+            Box(
+                modifier = Modifier
+                    .width(6.dp)
+                    .height(80.dp)
+                    .background(task.color?.toColor() ?: Color.Transparent)
             )
-            task.description?.let {
-                if (it.isNotBlank()) {
+
+            Checkbox(
+                checked = task.done,
+                onCheckedChange = { onToggleStatus(task.id) },
+                modifier = Modifier.padding(start = 8.dp)
+            )
+
+            Column (
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.Start
+            ){
+                Text(
+                    text = task.title,
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!task.description.isNullOrBlank()) {
                     Text(
-                        text = it,
+                        text = task.description,
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
                         textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-            }
-            Row(
-                modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                task.created?.let {
-                    Text(
-                        text = it,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                        fontWeight = FontWeight.Normal,
-                        textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
-                    )
-                }
-
-                if (task.category != null && task.category.isNotBlank()) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.secondaryContainer,
-                                shape = CircleShape
-                            )
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
+                Row(
+                    modifier = Modifier.padding(top = 6.dp).fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    task.created?.let {
                         Text(
-                            text = task.category,
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            fontWeight = FontWeight.Bold
+                            text = it,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Normal
                         )
                     }
-                }
-                
-                // Spacer pushes the reminder info to the right
-                Spacer(modifier = Modifier.weight(1f))
 
-                // Detailed Reminder Info aligned to the right
-                if (task.reminder != null) {
-                    val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(task.reminder), ZoneId.systemDefault())
-                    val formattedReminder = ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
+                    if (!task.category.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.secondaryContainer,
+                                    shape = CircleShape
+                                )
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = task.category,
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    }
                     
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = formattedReminder,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold
-                        )
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    if (task.reminder != null) {
+                        val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(task.reminder), ZoneId.systemDefault())
+                        val formattedReminder = ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = formattedReminder,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
                     }
                 }
             }
@@ -262,9 +242,9 @@ fun CardPreview() {
                 task = Task(
                     id = 1,
                     title = "Wakeup",
-                    description = "This is a sample description for the task.",
+                    description = "Early from bed",
                     done = false,
-                    created = "Oct 23, 07:00",
+                    created = "31/12 07:00",
                     category = "Rotina",
                     color = "#FF5733",
                     reminder = System.currentTimeMillis() + 3600000
