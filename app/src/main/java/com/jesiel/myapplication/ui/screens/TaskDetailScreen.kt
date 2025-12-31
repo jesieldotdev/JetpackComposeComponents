@@ -47,11 +47,12 @@ fun TaskDetailScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Use the SAME background image from the shared ViewModel state
         AsyncImage(
             model = uiState.backgroundImageUrl,
             contentDescription = null,
-            modifier = Modifier.fillMaxSize().blur(20.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(uiState.blurIntensity.dp), // Observed from state
             contentScale = ContentScale.Crop
         )
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 0.4f)))

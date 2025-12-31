@@ -12,9 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,15 +33,17 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.jesiel.myapplication.viewmodel.AppTheme
 import com.jesiel.myapplication.viewmodel.ThemeViewModel
+import com.jesiel.myapplication.viewmodel.TodoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    backgroundImageUrl: String,
+    todoViewModel: TodoViewModel,
     themeViewModel: ThemeViewModel,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val uiState by todoViewModel.uiState.collectAsState()
     val themeState by themeViewModel.themeState.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
 
@@ -87,9 +90,11 @@ fun SettingsScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         AsyncImage(
-            model = backgroundImageUrl,
+            model = uiState.backgroundImageUrl,
             contentDescription = null,
-            modifier = Modifier.fillMaxSize().blur(20.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(uiState.blurIntensity.dp),
             contentScale = ContentScale.Crop
         )
         Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 0.6f)))
@@ -121,7 +126,7 @@ fun SettingsScreen(
                     SettingsClickableItem(
                         title = "Cores Dinâmicas",
                         subtitle = "Usar cores do papel de parede",
-                        icon = Icons.Default.Build,
+                        icon = Icons.Default.Settings,
                         trailing = {
                             Switch(
                                 checked = themeState.useDynamicColors,
@@ -141,6 +146,36 @@ fun SettingsScreen(
                         icon = Icons.Default.Create,
                         onClick = { showThemeDialog = true }
                     )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                SettingsSection(title = "Personalização de Fundo") {
+                    SettingsClickableItem(
+                        title = "Trocar Imagem",
+                        subtitle = "Sorteia um novo papel de parede",
+                        icon = Icons.Default.Refresh,
+                        onClick = { todoViewModel.refreshBackgroundImage() }
+                    )
+                    
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+                    )
+                    
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                            Spacer(Modifier.width(16.dp))
+                            Text("Intensidade do Blur", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Slider(
+                            value = uiState.blurIntensity,
+                            onValueChange = { todoViewModel.updateBlurIntensity(it) },
+                            valueRange = 0f..50f,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

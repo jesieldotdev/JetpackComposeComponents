@@ -82,16 +82,13 @@ fun HomeScreen(
         }
     }
 
-    // Wrap the drawer in a provider to flip its direction to Right (RTL)
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
-                // Inside the drawer, restore Left-to-Right direction for content
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                     ModalDrawerSheet(
                         drawerContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
-                        // Rounded corners on the LEFT side because it opens from the right
                         drawerShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp),
                         modifier = Modifier.width(300.dp)
                     ) {
@@ -141,7 +138,6 @@ fun HomeScreen(
                 }
             }
         ) {
-            // Restore Left-to-Right direction for the main app content
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                 Scaffold(
                     containerColor = Color.Transparent,
@@ -253,7 +249,7 @@ fun HomeContent(
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .blur(20.dp),
+                .blur(uiState.blurIntensity.dp),
             contentScale = ContentScale.Crop
         )
 
@@ -278,7 +274,7 @@ fun HomeContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Header()
+                    Header(modifier = Modifier.weight(1f))
                     Surface(
                         modifier = Modifier
                             .size(48.dp)

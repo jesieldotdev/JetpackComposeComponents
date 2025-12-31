@@ -120,7 +120,7 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
 
         composable("settings") {
             SettingsScreen(
-                backgroundImageUrl = uiState.backgroundImageUrl,
+                todoViewModel = todoViewModel,
                 themeViewModel = themeViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )

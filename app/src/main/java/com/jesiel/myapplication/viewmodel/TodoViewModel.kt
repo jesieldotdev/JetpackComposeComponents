@@ -1,19 +1,22 @@
 package com.jesiel.myapplication.viewmodel
 
 import android.app.AlarmManager
+import android.app.Application
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.jesiel.myapplication.data.PreferenceManager
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.data.TodoRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,7 +30,8 @@ data class TodoUiState(
     val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val backgroundImageUrl: String = ""
+    val backgroundImageUrl: String = "",
+    val blurIntensity: Float = 20f
 )
 
 // One-time events to be sent to the UI
@@ -35,9 +39,10 @@ sealed interface UiEvent {
     data class ShowUndoSnackbar(val task: Task) : UiEvent
 }
 
-class TodoViewModel : ViewModel() {
+class TodoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = TodoRepository()
+    private val preferenceManager = PreferenceManager(application)
 
     private val _uiState = MutableStateFlow(TodoUiState())
     val uiState: StateFlow<TodoUiState> = _uiState.asStateFlow()
@@ -48,11 +53,43 @@ class TodoViewModel : ViewModel() {
     private var lastDeletedTask: Task? = null
 
     init {
-        // Generate a random image URL once per day to ensure consistency during the session
-        val todaySeed = LocalDate.now().toEpochDay()
-        val randomUrl = "https://picsum.photos/1000/1800?random=$todaySeed"
-        _uiState.update { it.copy(backgroundImageUrl = randomUrl) }
+        loadSettings()
         fetchTodos()
+    }
+
+    private fun loadSettings() {
+        viewModelScope.launch {
+            val savedBlur = preferenceManager.blurIntensity.first()
+            val savedUrl = preferenceManager.backgroundImageUrl.first()
+            val lastUpdateDay = preferenceManager.lastImageUpdateDay.first()
+            val today = LocalDate.now().toEpochDay()
+
+            _uiState.update { it.copy(blurIntensity = savedBlur) }
+
+            if (savedUrl.isEmpty() || lastUpdateDay != today) {
+                // New day or first time: get new image
+                refreshBackgroundImage()
+            } else {
+                // Same day: use saved image
+                _uiState.update { it.copy(backgroundImageUrl = savedUrl) }
+            }
+        }
+    }
+
+    fun refreshBackgroundImage() {
+        viewModelScope.launch {
+            val today = LocalDate.now().toEpochDay()
+            val randomUrl = "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}"
+            _uiState.update { it.copy(backgroundImageUrl = randomUrl) }
+            preferenceManager.setBackgroundImage(randomUrl, today)
+        }
+    }
+
+    fun updateBlurIntensity(intensity: Float) {
+        _uiState.update { it.copy(blurIntensity = intensity) }
+        viewModelScope.launch {
+            preferenceManager.setBlurIntensity(intensity)
+        }
     }
 
     fun refresh() {
