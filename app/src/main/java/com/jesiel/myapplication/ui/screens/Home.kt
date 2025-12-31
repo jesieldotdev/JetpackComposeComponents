@@ -83,7 +83,7 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
             uiState = uiState,
             showSheet = showSheet,
             onDismissSheet = { showSheet = false },
-            onSaveTodo = { title -> todoViewModel.addTodo(title) },
+            onSaveTodo = { title, description -> todoViewModel.addTodo(title, description) },
             onRefresh = { todoViewModel.refresh() },
             onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
             onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) }
@@ -98,7 +98,7 @@ fun HomeContent(
     uiState: TodoUiState,
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
-    onSaveTodo: (String) -> Unit,
+    onSaveTodo: (String, String?) -> Unit,
     onRefresh: () -> Unit,
     onToggleTaskStatus: (Int) -> Unit,
     onDeleteTask: (Int) -> Unit
@@ -159,7 +159,7 @@ fun HomeContentPreview() {
             uiState = TodoUiState(tasks = sampleTasks),
             showSheet = false,
             onDismissSheet = {},
-            onSaveTodo = {},
+            onSaveTodo = { _, _ -> },
             onRefresh = {},
             onToggleTaskStatus = {},
             onDeleteTask = {}

@@ -1,5 +1,6 @@
 package com.jesiel.myapplication.data
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -16,5 +17,8 @@ data class TodoRecord(
 data class Task(
     val id: Int,
     val title: String,
-    val done: Boolean
+    val description: String? = null,
+    val done: Boolean,
+    @SerialName("Created")
+    val created: String? = null
 )

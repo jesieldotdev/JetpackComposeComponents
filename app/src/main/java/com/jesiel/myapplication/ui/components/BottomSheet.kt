@@ -15,10 +15,11 @@ import androidx.compose.ui.unit.dp
 fun ExampleBottomSheet(
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
-    onSave: (String) -> Unit
+    onSave: (String, String?) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
-    var text by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
 
     if (showSheet) {
         ModalBottomSheet(
@@ -30,18 +31,34 @@ fun ExampleBottomSheet(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = { Text("Nova Tarefa") },
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = "Nova Tarefa",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Título") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição (opcional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
+                Spacer(modifier = Modifier.height(24.dp))
                 Button(
                     onClick = {
-                        if (text.isNotBlank()) {
-                            onSave(text)
-                            text = ""
+                        if (title.isNotBlank()) {
+                            onSave(title, if (description.isBlank()) null else description)
+                            title = ""
+                            description = ""
                             onDismissSheet()
                         }
                     },
@@ -49,6 +66,7 @@ fun ExampleBottomSheet(
                 ) {
                     Text("Salvar")
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }

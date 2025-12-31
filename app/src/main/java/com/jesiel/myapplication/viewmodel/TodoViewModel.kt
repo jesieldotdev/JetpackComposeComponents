@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 // Represents the state of the UI
 data class TodoUiState(
@@ -57,11 +59,21 @@ class TodoViewModel : ViewModel() {
         }
     }
 
-    fun addTodo(title: String) {
+    fun addTodo(title: String, description: String?) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val newId = (currentTasks.maxOfOrNull { it.id } ?: 0) + 1
-            val newTask = Task(id = newId, title = title, done = false)
+            
+            // Get current time formatted as HH:mm
+            val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"))
+            
+            val newTask = Task(
+                id = newId, 
+                title = title, 
+                description = description,
+                done = false, 
+                created = currentTime
+            )
 
             _uiState.update { it.copy(tasks = currentTasks + newTask) }
 
@@ -95,7 +107,7 @@ class TodoViewModel : ViewModel() {
     fun deleteTodo(taskId: Int) {
         viewModelScope.launch {
             val taskToDelete = _uiState.value.tasks.find { it.id == taskId } ?: return@launch
-            lastDeletedTask = taskToDelete // Temporarily store the task
+            lastDeletedTask = taskToDelete
             _uiState.update { it.copy(tasks = it.tasks.filterNot { t -> t.id == taskId }) }
             _eventChannel.send(UiEvent.ShowUndoSnackbar(taskToDelete))
         }
@@ -103,20 +115,18 @@ class TodoViewModel : ViewModel() {
 
     fun undoDelete(task: Task) {
         val currentTasks = _uiState.value.tasks
-        // This is a simple re-add. For a more robust solution, you'd preserve the original index.
         _uiState.update { it.copy(tasks = (currentTasks + task).sortedBy { it.id }) }
-        lastDeletedTask = null // Clear the stored task
+        lastDeletedTask = null
     }
 
     fun confirmDeletion() {
         viewModelScope.launch {
             if (lastDeletedTask != null) {
                 try {
-                    // The list in uiState is already correct, just save it to the repo
                     repository.updateTodos(_uiState.value.tasks)
-                    lastDeletedTask = null // Clear after successful deletion
+                    lastDeletedTask = null
                 } catch (e: Exception) {
-                    fetchTodos() // Re-fetch to ensure consistency
+                    fetchTodos()
                     e.printStackTrace()
                 }
             }
