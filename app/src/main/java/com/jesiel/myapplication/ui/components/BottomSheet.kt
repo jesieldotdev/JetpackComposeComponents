@@ -1,5 +1,8 @@
 package com.jesiel.myapplication.ui.components
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,21 +15,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.jesiel.myapplication.viewmodel.ReminderReceiver
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExampleBottomSheet(
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
-    onSave: (String, String?, String?, String?) -> Unit
+    onSave: (String, String?, String?, String?, Long?) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     var title by remember { mutableStateOf("") }
@@ -35,6 +47,9 @@ fun ExampleBottomSheet(
     
     val colors = listOf("#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3", "#33FFF3")
     var selectedColor by remember { mutableStateOf(colors[0]) }
+
+    var reminderTime by remember { mutableStateOf<Long?>(null) }
+    val context = LocalContext.current
 
     if (showSheet) {
         ModalBottomSheet(
@@ -75,6 +90,56 @@ fun ExampleBottomSheet(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Reminder Selector
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val currentDateTime = Calendar.getInstance()
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, day ->
+                                    TimePickerDialog(
+                                        context,
+                                        { _, hour, minute ->
+                                            val calendar = Calendar.getInstance().apply {
+                                                set(year, month, day, hour, minute)
+                                            }
+                                            reminderTime = calendar.timeInMillis
+                                        },
+                                        currentDateTime.get(Calendar.HOUR_OF_DAY),
+                                        currentDateTime.get(Calendar.MINUTE),
+                                        true
+                                    ).show()
+                                },
+                                currentDateTime.get(Calendar.YEAR),
+                                currentDateTime.get(Calendar.MONTH),
+                                currentDateTime.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications, 
+                        contentDescription = null, 
+                        tint = if (reminderTime != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (reminderTime != null) {
+                            val ldt = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(reminderTime!!), ZoneId.systemDefault())
+                            "Lembrete: ${ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))}"
+                        } else {
+                            "Adicionar lembrete"
+                        },
+                        color = if (reminderTime != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text("Escolha uma cor:", style = MaterialTheme.typography.labelMedium)
@@ -103,15 +168,27 @@ fun ExampleBottomSheet(
                 Button(
                     onClick = {
                         if (title.isNotBlank()) {
+                            // If there's a reminder, send an immediate notification to confirm
+                            reminderTime?.let { time ->
+                                val ldt = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(time), ZoneId.systemDefault())
+                                val formattedTime = ldt.format(DateTimeFormatter.ofPattern("dd/MM 'às' HH:mm"))
+                                val testIntent = Intent(context, ReminderReceiver::class.java).apply {
+                                    putExtra("task_title", "Lembrete agendado para $formattedTime")
+                                }
+                                context.sendBroadcast(testIntent)
+                            }
+
                             onSave(
                                 title, 
                                 if (description.isBlank()) null else description,
                                 if (category.isBlank()) null else category,
-                                selectedColor
+                                selectedColor,
+                                reminderTime
                             )
                             title = ""
                             description = ""
                             category = ""
+                            reminderTime = null
                             onDismissSheet()
                         }
                     },

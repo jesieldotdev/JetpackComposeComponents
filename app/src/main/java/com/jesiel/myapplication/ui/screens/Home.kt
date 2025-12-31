@@ -44,9 +44,11 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.jesiel.myapplication.data.Task
@@ -64,6 +66,7 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
     val uiState by todoViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(key1 = true) {
         todoViewModel.eventFlow.collectLatest { event ->
@@ -84,7 +87,7 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
     }
 
     Scaffold(
-        containerColor = Color.Transparent, // Permite ver a imagem atrás do Scaffold
+        containerColor = Color.Transparent, 
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = { showSheet = true }) {
@@ -96,11 +99,13 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
             uiState = uiState,
             showSheet = showSheet,
             onDismissSheet = { showSheet = false },
-            onSaveTodo = { title, desc, cat, color -> todoViewModel.addTodo(title, desc, cat, color) },
+            onSaveTodo = { title, desc, cat, color, reminder -> 
+                todoViewModel.addTodo(context, title, desc, cat, color, reminder) 
+            },
             onRefresh = { todoViewModel.refresh() },
             onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
             onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) },
-            contentPadding = innerPadding // Passa o padding do sistema para o conteúdo
+            contentPadding = innerPadding
         )
     }
 }
@@ -111,7 +116,7 @@ fun HomeContent(
     uiState: TodoUiState,
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
-    onSaveTodo: (String, String?, String?, String?) -> Unit,
+    onSaveTodo: (String, String?, String?, String?, Long?) -> Unit,
     onRefresh: () -> Unit,
     onToggleTaskStatus: (Int) -> Unit,
     onDeleteTask: (Int) -> Unit,
@@ -159,7 +164,7 @@ fun HomeContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(contentPadding) // Aplica o padding do sistema apenas ao conteúdo textual/lista
+                    .padding(contentPadding)
             ) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
                     Header()
@@ -233,7 +238,7 @@ fun HomeContentPreview() {
             uiState = TodoUiState(tasks = sampleTasks),
             showSheet = false,
             onDismissSheet = {},
-            onSaveTodo = { _, _, _, _ -> },
+            onSaveTodo = { _, _, _, _, _ -> },
             onRefresh = {},
             onToggleTaskStatus = {},
             onDeleteTask = {}

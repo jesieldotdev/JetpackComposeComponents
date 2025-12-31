@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,6 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.ui.theme.myTodosTheme
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 // Helper to convert hex string to Color
 fun String.toColor(): Color {
@@ -124,7 +130,7 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f))
             .padding(end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
@@ -133,7 +139,7 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
         Box(
             modifier = Modifier
                 .width(6.dp)
-                .height(80.dp) // Approximate height, adapts to content
+                .height(80.dp)
                 .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
                 .background(task.color?.toColor() ?: Color.Transparent)
         )
@@ -184,6 +190,30 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
                         textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
                     )
                 }
+                
+                // Detailed Reminder Info
+                if (task.reminder != null) {
+                    val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(task.reminder), ZoneId.systemDefault())
+                    val formattedReminder = ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = formattedReminder,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
                 if (task.category != null && task.category.isNotBlank()) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
@@ -220,20 +250,8 @@ fun CardPreview() {
                     done = false,
                     created = "Oct 23, 07:00",
                     category = "Rotina",
-                    color = "#FF5733"
-                ),
-                onToggleStatus = {},
-                onDelete = {}
-            )
-            Card(
-                task = Task(
-                    id = 2,
-                    title = "Morning exercises",
-                    description = null,
-                    done = true,
-                    created = "Oct 23, 08:30",
-                    category = "Saúde",
-                    color = "#33FF57"
+                    color = "#FF5733",
+                    reminder = System.currentTimeMillis() + 3600000
                 ),
                 onToggleStatus = {},
                 onDelete = {}

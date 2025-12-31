@@ -1,5 +1,11 @@
 package com.jesiel.myapplication.viewmodel
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesiel.myapplication.data.Task
@@ -60,12 +66,11 @@ class TodoViewModel : ViewModel() {
         }
     }
 
-    fun addTodo(title: String, description: String?, category: String?, color: String?) {
+    fun addTodo(context: Context, title: String, description: String?, category: String?, color: String?, reminder: Long?) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val newId = (currentTasks.maxOfOrNull { it.id } ?: 0) + 1
             
-            // Format current date and time: "Oct 23, 18:30"
             val formatter = DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale("pt", "BR"))
             val currentTime = LocalDateTime.now().format(formatter).replaceFirstChar { it.uppercase() }
             
@@ -76,10 +81,18 @@ class TodoViewModel : ViewModel() {
                 category = category,
                 color = color,
                 done = false, 
-                created = currentTime
+                created = currentTime,
+                reminder = reminder
             )
 
             _uiState.update { it.copy(tasks = currentTasks + newTask) }
+
+            // Schedule notification if reminder exists
+            reminder?.let { time ->
+                if (time > System.currentTimeMillis()) {
+                    scheduleNotification(context, time, title, description, newId)
+                }
+            }
 
             try {
                 repository.updateTodos(_uiState.value.tasks)
@@ -88,6 +101,36 @@ class TodoViewModel : ViewModel() {
                 e.printStackTrace()
             }
         }
+    }
+
+    private fun scheduleNotification(context: Context, time: Long, title: String, description: String?, id: Int) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                context.startActivity(intent)
+                return
+            }
+        }
+
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra("task_title", title)
+            putExtra("task_description", description)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            time,
+            pendingIntent
+        )
     }
 
     fun toggleTaskStatus(taskId: Int) {

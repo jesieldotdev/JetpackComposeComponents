@@ -22,5 +22,6 @@ data class Task(
     val color: String? = null,
     val done: Boolean,
     @SerialName("Created")
-    val created: String? = null
+    val created: String? = null,
+    val reminder: Long? = null // Optional reminder time in milliseconds
 )
