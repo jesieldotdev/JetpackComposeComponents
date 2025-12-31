@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +25,8 @@ import com.jesiel.myapplication.ui.screens.LoginScreen
 import com.jesiel.myapplication.ui.screens.SettingsScreen
 import com.jesiel.myapplication.ui.screens.TaskDetailScreen
 import com.jesiel.myapplication.ui.theme.myTodosTheme
+import com.jesiel.myapplication.viewmodel.AppTheme
+import com.jesiel.myapplication.viewmodel.ThemeViewModel
 import com.jesiel.myapplication.viewmodel.TodoViewModel
 
 class MainActivity : ComponentActivity() {
@@ -42,8 +45,20 @@ class MainActivity : ComponentActivity() {
         checkNotificationPermission()
 
         setContent {
-            myTodosTheme(dynamicColor = true) {
-                AppNavigation()
+            val themeViewModel: ThemeViewModel = viewModel()
+            val themeState by themeViewModel.themeState.collectAsState()
+            
+            val useDarkTheme = when (themeState.theme) {
+                AppTheme.LIGHT -> false
+                AppTheme.DARK -> true
+                AppTheme.SYSTEM -> isSystemInDarkTheme()
+            }
+
+            myTodosTheme(
+                darkTheme = useDarkTheme,
+                dynamicColor = themeState.useDynamicColors
+            ) {
+                AppNavigation(themeViewModel = themeViewModel)
             }
         }
     }
@@ -58,7 +73,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(themeViewModel: ThemeViewModel) {
     val navController = rememberNavController()
     val todoViewModel: TodoViewModel = viewModel()
     val uiState by todoViewModel.uiState.collectAsState()
@@ -106,6 +121,7 @@ fun AppNavigation() {
         composable("settings") {
             SettingsScreen(
                 backgroundImageUrl = uiState.backgroundImageUrl,
+                themeViewModel = themeViewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
