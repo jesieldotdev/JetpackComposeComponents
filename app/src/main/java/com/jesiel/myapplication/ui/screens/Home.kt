@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.ui.components.Card
 import com.jesiel.myapplication.ui.components.ExampleBottomSheet
@@ -125,7 +126,7 @@ fun HomeScreen(
                 todoViewModel.addTodo(context, title, desc, cat, color, reminder)
             },
             onRefresh = { todoViewModel.refresh() },
-            onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(context, taskId) }, // Pass context here
+            onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(context, taskId) },
             onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) },
             onTaskClick = onNavigateToDetail,
             contentPadding = innerPadding
@@ -147,8 +148,8 @@ fun HomeContent(
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
-    val randomBackgroundImage = remember { "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}" }
-
+    val context = LocalContext.current
+    
     val categories = remember(uiState.tasks) {
         listOf("Tudo") + uiState.tasks.mapNotNull { it.category }.distinct()
     }
@@ -167,8 +168,14 @@ fun HomeContent(
             .fillMaxSize()
             .pullRefresh(pullRefreshState)
     ) {
+        // Corrected: Use image from state and enable disk caching
         AsyncImage(
-            model = randomBackgroundImage,
+            model = ImageRequest.Builder(context)
+                .data(uiState.backgroundImageUrl)
+                .crossfade(true)
+                .diskCacheKey(uiState.backgroundImageUrl) // Fixed key for caching
+                .memoryCacheKey(uiState.backgroundImageUrl)
+                .build(),
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()

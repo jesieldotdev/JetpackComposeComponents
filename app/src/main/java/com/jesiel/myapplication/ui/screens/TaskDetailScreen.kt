@@ -47,8 +47,9 @@ fun TaskDetailScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // Use the SAME background image from the shared ViewModel state
         AsyncImage(
-            model = "https://picsum.photos/1000/1800?blur=10",
+            model = uiState.backgroundImageUrl,
             contentDescription = null,
             modifier = Modifier.fillMaxSize().blur(20.dp),
             contentScale = ContentScale.Crop
@@ -59,10 +60,10 @@ fun TaskDetailScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Detalhes da Tarefa") },
+                    title = { Text("Detalhes da Tarefa", color = MaterialTheme.colorScheme.onSurface) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Voltar", tint = MaterialTheme.colorScheme.onSurface)
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -78,41 +79,44 @@ fun TaskDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(24.dp)
+                    .padding(20.dp)
             ) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+                    shape = RoundedCornerShape(28.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+                    tonalElevation = 2.dp
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(12.dp)
+                                    .size(14.dp)
                                     .clip(CircleShape)
                                     .background(task.color?.toColor() ?: Color.Transparent)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = task.title,
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        if (task.description != null) {
+                        if (!task.description.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = task.description,
                                 style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                                lineHeight = 24.sp
                             )
                         }
 
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 24.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
                         )
 
                         Row(
@@ -126,38 +130,58 @@ fun TaskDetailScreen(
                                     style = MaterialTheme.typography.labelSmall, 
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
-                                Text(task.created ?: "--", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    text = task.created ?: "--", 
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
 
-                            if (task.category != null) {
+                            if (!task.category.isNullOrBlank()) {
                                 Surface(
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     shape = CircleShape
                                 ) {
                                     Text(
                                         text = task.category,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                                         style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
                                 }
                             }
                         }
 
                         if (task.reminder != null) {
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
                             val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(task.reminder), ZoneId.systemDefault())
                             val formattedReminder = ldt.format(DateTimeFormatter.ofPattern("dd 'de' MMMM, HH:mm"))
                             
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Notifications, null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Lembrete: $formattedReminder",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Notifications, 
+                                        contentDescription = null, 
+                                        modifier = Modifier.size(18.dp), 
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Lembrete: $formattedReminder",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }

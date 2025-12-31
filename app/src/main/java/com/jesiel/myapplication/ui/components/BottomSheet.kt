@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.viewmodel.ReminderReceiver
@@ -33,10 +35,10 @@ import java.util.Calendar
 fun ExampleBottomSheet(
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
-    initialTask: Task? = null, // Task to pre-fill the form for editing
+    initialTask: Task? = null,
     onSave: (String, String?, String?, String?, Long?) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
@@ -47,7 +49,6 @@ fun ExampleBottomSheet(
     
     val context = LocalContext.current
 
-    // Pre-fill fields when an initial task is provided
     LaunchedEffect(initialTask, showSheet) {
         if (showSheet) {
             if (initialTask != null) {
@@ -69,49 +70,77 @@ fun ExampleBottomSheet(
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = onDismissSheet,
-            sheetState = sheetState
+            sheetState = sheetState,
+            dragHandle = { BottomSheetDefaults.DragHandle() },
+            // Use surfaceVariant for a more modern, integrated background color
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()) // Ensure content is scrollable
+                    .fillMaxHeight(0.9f)
+                    .padding(horizontal = 20.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Text(
                     text = if (initialTask == null) "Nova Tarefa" else "Editar Tarefa",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Título") },
+                    label = { Text("O que você vai fazer?") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Descrição (opcional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = category,
-                    onValueChange = { category = it },
-                    label = { Text("Categoria (opcional)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    shape = RoundedCornerShape(16.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Row(
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição detalhada (opcional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    minLines = 5,
+                    maxLines = 10,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    )
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = category,
+                    onValueChange = { category = it },
+                    label = { Text("Categoria (ex: Trabalho, Casa)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    )
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Surface(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
                         .clickable {
                             val currentDateTime = Calendar.getInstance()
                             if (reminderTime != null) {
@@ -128,7 +157,6 @@ fun ExampleBottomSheet(
                                             }
                                             reminderTime = calendar.timeInMillis
                                             
-                                            // Quick confirmation notification
                                             val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(reminderTime!!), ZoneId.systemDefault())
                                             val formattedTime = ldt.format(DateTimeFormatter.ofPattern("dd/MM 'às' HH:mm"))
                                             val testIntent = Intent(context, ReminderReceiver::class.java).apply {
@@ -145,44 +173,49 @@ fun ExampleBottomSheet(
                                 currentDateTime.get(Calendar.MONTH),
                                 currentDateTime.get(Calendar.DAY_OF_MONTH)
                             ).show()
-                        }
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications, 
-                        contentDescription = null, 
-                        tint = if (reminderTime != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (reminderTime != null) {
-                            val ldt = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(reminderTime!!), ZoneId.systemDefault())
-                            "Lembrete: ${ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))}"
-                        } else {
-                            "Adicionar lembrete"
                         },
-                        color = if (reminderTime != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications, 
+                            contentDescription = null, 
+                            tint = if (reminderTime != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = if (reminderTime != null) {
+                                val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(reminderTime!!), ZoneId.systemDefault())
+                                "Lembrete: ${ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))}"
+                            } else {
+                                "Adicionar um lembrete"
+                            },
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (reminderTime != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
                 
-                Text("Escolha uma cor:", style = MaterialTheme.typography.labelMedium)
+                Text("Identidade Visual (Cor):", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     colors.forEach { hex ->
                         Box(
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(Color(android.graphics.Color.parseColor(hex)))
                                 .border(
                                     width = if (selectedColor == hex) 3.dp else 0.dp,
-                                    color = if (selectedColor == hex) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    color = if (selectedColor == hex) MaterialTheme.colorScheme.onSurfaceVariant else Color.Transparent,
                                     shape = CircleShape
                                 )
                                 .clickable { selectedColor = hex }
@@ -190,7 +223,8 @@ fun ExampleBottomSheet(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(32.dp))
+                
                 Button(
                     onClick = {
                         if (title.isNotBlank()) {
@@ -204,11 +238,18 @@ fun ExampleBottomSheet(
                             onDismissSheet()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text(if (initialTask == null) "Salvar" else "Atualizar")
+                    Text(
+                        text = if (initialTask == null) "Criar Tarefa" else "Salvar Alterações",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
     }

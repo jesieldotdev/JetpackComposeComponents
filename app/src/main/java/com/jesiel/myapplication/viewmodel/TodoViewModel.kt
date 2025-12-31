@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -25,7 +26,8 @@ import java.util.Locale
 data class TodoUiState(
     val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val backgroundImageUrl: String = ""
 )
 
 // One-time events to be sent to the UI
@@ -46,6 +48,10 @@ class TodoViewModel : ViewModel() {
     private var lastDeletedTask: Task? = null
 
     init {
+        // Generate a random image URL once per day to ensure consistency during the session
+        val todaySeed = LocalDate.now().toEpochDay()
+        val randomUrl = "https://picsum.photos/1000/1800?random=$todaySeed"
+        _uiState.update { it.copy(backgroundImageUrl = randomUrl) }
         fetchTodos()
     }
 
@@ -119,7 +125,6 @@ class TodoViewModel : ViewModel() {
 
             _uiState.update { it.copy(tasks = updatedTasks) }
 
-            // Update notification
             cancelNotification(context, taskId)
             reminder?.let { time ->
                 if (time > System.currentTimeMillis()) {
@@ -194,7 +199,6 @@ class TodoViewModel : ViewModel() {
             if (isNowDone) {
                 cancelNotification(context, taskId)
             } else {
-                // If unchecking, re-schedule if reminder is in the future
                 val task = updatedTasks.find { it.id == taskId }
                 task?.reminder?.let { time ->
                     if (time > System.currentTimeMillis()) {
