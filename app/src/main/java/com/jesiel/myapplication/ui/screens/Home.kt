@@ -33,9 +33,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.ui.components.Card
 import com.jesiel.myapplication.ui.components.ExampleBottomSheet
@@ -104,13 +107,31 @@ fun HomeContent(
     onDeleteTask: (Int) -> Unit
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
+    // Random image URL that refreshes on each unique remember key (or app launch)
+    val randomBackgroundImage = remember { "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}" }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .pullRefresh(pullRefreshState)
     ) {
+        // Background Image with Blur
+        AsyncImage(
+            model = randomBackgroundImage,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(20.dp),
+            contentScale = ContentScale.Crop
+        )
+        
+        // Dark/Light Scrim to ensure readability
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.4f))
+        )
+
         if (uiState.isLoading && uiState.tasks.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
