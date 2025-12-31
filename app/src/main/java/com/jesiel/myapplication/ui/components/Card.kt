@@ -178,7 +178,7 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
                 }
             }
             Row(
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 4.dp).fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 task.created?.let {
@@ -189,29 +189,6 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
                         fontWeight = FontWeight.Normal,
                         textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
                     )
-                }
-                
-                // Detailed Reminder Info
-                if (task.reminder != null) {
-                    val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(task.reminder), ZoneId.systemDefault())
-                    val formattedReminder = ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
-                    
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(
-                            text = formattedReminder,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
                 }
 
                 if (task.category != null && task.category.isNotBlank()) {
@@ -228,6 +205,31 @@ private fun TaskContent(task: Task, onToggleStatus: (Int) -> Unit) {
                             text = task.category,
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                // Spacer pushes the reminder info to the right
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Detailed Reminder Info aligned to the right
+                if (task.reminder != null) {
+                    val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(task.reminder), ZoneId.systemDefault())
+                    val formattedReminder = ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            modifier = Modifier.size(12.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = formattedReminder,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                             fontWeight = FontWeight.Bold
                         )
                     }

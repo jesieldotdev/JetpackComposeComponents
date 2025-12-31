@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -26,6 +27,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -37,6 +40,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,27 +63,31 @@ import com.jesiel.myapplication.ui.theme.myTodosTheme
 import com.jesiel.myapplication.viewmodel.TodoUiState
 import com.jesiel.myapplication.viewmodel.TodoViewModel
 import com.jesiel.myapplication.viewmodel.UiEvent
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
     val uiState by todoViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     var showSheet by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    LaunchedEffect(key1 = true) {
-        todoViewModel.eventFlow.collectLatest { event ->
+    LaunchedEffect(Unit) {
+        todoViewModel.eventFlow.collect { event ->
             when (event) {
                 is UiEvent.ShowUndoSnackbar -> {
-                    val result = snackbarHostState.showSnackbar(
-                        message = "Tarefa removida",
-                        actionLabel = "Desfazer"
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        todoViewModel.undoDelete(event.task)
-                    } else {
-                        todoViewModel.confirmDeletion()
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = "Tarefa removida",
+                            actionLabel = "Desfazer",
+                            duration = SnackbarDuration.Short
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            todoViewModel.undoDelete(event.task)
+                        } else {
+                            todoViewModel.confirmDeletion()
+                        }
                     }
                 }
             }
@@ -87,8 +95,19 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
     }
 
     Scaffold(
-        containerColor = Color.Transparent, 
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = Color.Transparent,
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    actionColor = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = { showSheet = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Adicionar Tarefa")
@@ -99,8 +118,8 @@ fun HomeScreen(todoViewModel: TodoViewModel = viewModel()) {
             uiState = uiState,
             showSheet = showSheet,
             onDismissSheet = { showSheet = false },
-            onSaveTodo = { title, desc, cat, color, reminder -> 
-                todoViewModel.addTodo(context, title, desc, cat, color, reminder) 
+            onSaveTodo = { title, desc, cat, color, reminder ->
+                todoViewModel.addTodo(context, title, desc, cat, color, reminder)
             },
             onRefresh = { todoViewModel.refresh() },
             onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(taskId) },
@@ -124,7 +143,7 @@ fun HomeContent(
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
     val randomBackgroundImage = remember { "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}" }
-    
+
     val categories = remember(uiState.tasks) {
         listOf("Tudo") + uiState.tasks.mapNotNull { it.category }.distinct()
     }
@@ -151,7 +170,7 @@ fun HomeContent(
                 .blur(20.dp),
             contentScale = ContentScale.Crop
         )
-        
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -169,7 +188,7 @@ fun HomeContent(
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 16.dp)) {
                     Header()
                 }
-                
+
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
