@@ -84,7 +84,7 @@ fun AboutScreen(
                     ) {
                         // Developer Info
                         Text(
-                            text = "myTodos",
+                            text = "Taska",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary
@@ -128,7 +128,7 @@ fun AboutScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Text(
-                            text = "© 2025 myTodos. Todos os direitos reservados.",
+                            text = "© 2025 Taska. Todos os direitos reservados.",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )

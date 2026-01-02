@@ -98,7 +98,7 @@ fun HomeScreen(
                                 .padding(24.dp)
                         ) {
                             Text(
-                                text = "myTodos",
+                                text = "Taska",
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.primary
