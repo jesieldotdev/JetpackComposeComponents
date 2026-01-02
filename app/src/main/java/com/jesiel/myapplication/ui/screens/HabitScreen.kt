@@ -3,6 +3,7 @@ package com.jesiel.myapplication.ui.screens
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,7 +43,8 @@ fun HabitScreen(
     themeViewModel: ThemeViewModel = viewModel(),
     onNavigateToHome: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToAbout: () -> Unit
+    onNavigateToAbout: () -> Unit,
+    onNavigateToHabitDetail: (Int) -> Unit
 ) {
     val habitState by habitViewModel.uiState.collectAsState()
     val todoState by todoViewModel.uiState.collectAsState()
@@ -114,12 +116,13 @@ fun HabitScreen(
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
                                 contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(habitState.habits, key = { it.id }) { habit ->
                                     HabitCard(
                                         habit = habit,
-                                        onIncrement = { habitViewModel.incrementHabit(habit.id) }
+                                        onIncrement = { habitViewModel.incrementHabit(habit.id) },
+                                        onClick = { onNavigateToHabitDetail(habit.id) }
                                     )
                                 }
                             }
@@ -129,8 +132,8 @@ fun HabitScreen(
                     HabitBottomSheet(
                         showSheet = showAddHabitSheet,
                         onDismissSheet = { showAddHabitSheet = false },
-                        onSave = { title, goal, unit, color ->
-                            habitViewModel.addHabit(title, goal, unit, color)
+                        onSave = { title, goal, unit, color, streak, streakGoal ->
+                            habitViewModel.addHabit(title, goal, unit, color, streakGoal)
                         }
                     )
                 }
@@ -142,7 +145,8 @@ fun HabitScreen(
 @Composable
 fun HabitCard(
     habit: Habit,
-    onIncrement: () -> Unit
+    onIncrement: () -> Unit,
+    onClick: () -> Unit
 ) {
     val isCompleted = habit.currentProgress >= habit.goal
     val progress = if (habit.goal > 0) habit.currentProgress.toFloat() / habit.goal else 0f
@@ -155,7 +159,10 @@ fun HabitCard(
     )
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         color = containerColor,
         tonalElevation = if (isCompleted) 4.dp else 2.dp

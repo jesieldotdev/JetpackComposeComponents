@@ -37,13 +37,10 @@ class HabitViewModel : ViewModel() {
                 val yesterday = today - 1
 
                 val processedHabits = habits.map { habit ->
-                    // Reset progress if it's a new day
-                    val updatedHabit = if (habit.lastUpdatedDay != today) {
-                        // Check if streak should be reset (if not completed yesterday)
+                    if (habit.lastUpdatedDay != today) {
                         val newStreak = if (habit.lastCompletedDay == yesterday) habit.streak else 0
                         habit.copy(currentProgress = 0, lastUpdatedDay = today, streak = newStreak)
                     } else habit
-                    updatedHabit
                 }
 
                 if (processedHabits != habits) {
@@ -88,7 +85,7 @@ class HabitViewModel : ViewModel() {
         }
     }
 
-    fun addHabit(title: String, goal: Int, unit: String, color: String?) {
+    fun addHabit(title: String, goal: Int, unit: String, color: String?, streakGoal: Int) {
         viewModelScope.launch {
             val currentHabits = _uiState.value.habits
             val newId = (currentHabits.maxOfOrNull { it.id } ?: 0) + 1
@@ -99,10 +96,38 @@ class HabitViewModel : ViewModel() {
                 unit = unit,
                 color = color,
                 lastUpdatedDay = LocalDate.now().toEpochDay(),
-                streak = 0
+                streak = 0,
+                streakGoal = streakGoal
             )
 
             val updatedHabits = currentHabits + newHabit
+            _uiState.update { it.copy(habits = updatedHabits) }
+
+            try {
+                val currentRecord = repository.getFullRecord()
+                repository.updateFullRecord(currentRecord.copy(habits = updatedHabits))
+            } catch (e: Exception) {
+                _uiState.update { it.copy(habits = currentHabits, error = e.message) }
+            }
+        }
+    }
+
+    fun updateHabit(habitId: Int, title: String, goal: Int, unit: String, color: String?, streak: Int, streakGoal: Int) {
+        viewModelScope.launch {
+            val currentHabits = _uiState.value.habits
+            val updatedHabits = currentHabits.map {
+                if (it.id == habitId) {
+                    it.copy(
+                        title = title,
+                        goal = goal,
+                        unit = unit,
+                        color = color,
+                        streak = streak,
+                        streakGoal = streakGoal
+                    )
+                } else it
+            }
+
             _uiState.update { it.copy(habits = updatedHabits) }
 
             try {

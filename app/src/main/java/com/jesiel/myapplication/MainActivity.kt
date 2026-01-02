@@ -140,7 +140,23 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
                 },
                 onNavigateToAbout = {
                     navController.navigate("about")
+                },
+                onNavigateToHabitDetail = { habitId ->
+                    navController.navigate("habit_detail/$habitId")
                 }
+            )
+        }
+
+        composable(
+            route = "habit_detail/{habitId}",
+            arguments = listOf(navArgument("habitId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val habitId = backStackEntry.arguments?.getInt("habitId") ?: -1
+            HabitDetailScreen(
+                habitId = habitId,
+                habitViewModel = habitViewModel,
+                todoViewModel = todoViewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

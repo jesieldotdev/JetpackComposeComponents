@@ -7,11 +7,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -22,15 +24,38 @@ import com.jesiel.myapplication.data.Habit
 fun HabitBottomSheet(
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
-    onSave: (String, Int, String, String?) -> Unit
+    initialHabit: Habit? = null,
+    onSave: (String, Int, String, String?, Int, Int) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var title by remember { mutableStateOf("") }
     var goal by remember { mutableStateOf("") }
     var unit by remember { mutableStateOf("") }
+    var streak by remember { mutableStateOf("0") }
+    var streakGoal by remember { mutableStateOf("0") }
     
     val colors = listOf("#FF5733", "#33FF57", "#3357FF", "#F3FF33", "#FF33F3", "#33FFF3")
     var selectedColor by remember { mutableStateOf(colors[0]) }
+
+    LaunchedEffect(initialHabit, showSheet) {
+        if (showSheet) {
+            if (initialHabit != null) {
+                title = initialHabit.title
+                goal = initialHabit.goal.toString()
+                unit = initialHabit.unit
+                streak = initialHabit.streak.toString()
+                streakGoal = initialHabit.streakGoal.toString()
+                selectedColor = initialHabit.color ?: colors[0]
+            } else {
+                title = ""
+                goal = ""
+                unit = ""
+                streak = "0"
+                streakGoal = "0"
+                selectedColor = colors[0]
+            }
+        }
+    }
 
     if (showSheet) {
         ModalBottomSheet(
@@ -41,12 +66,12 @@ fun HabitBottomSheet(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.75f)
+                    .fillMaxHeight(0.85f)
                     .padding(horizontal = 24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "Novo Hábito",
+                    text = if (initialHabit == null) "Novo Hábito" else "Editar Hábito",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
@@ -96,6 +121,42 @@ fun HabitBottomSheet(
                         )
                     )
                 }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = streak,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) streak = it },
+                        label = { Text("Streak Atual") },
+                        leadingIcon = { Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)) },
+                        modifier = Modifier.weight(1f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            unfocusedBorderColor = Color.Transparent
+                        )
+                    )
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    OutlinedTextField(
+                        value = streakGoal,
+                        onValueChange = { if (it.all { char -> char.isDigit() }) streakGoal = it },
+                        label = { Text("Meta de Dias") },
+                        leadingIcon = { Icon(Icons.Default.Star, null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)) },
+                        modifier = Modifier.weight(1f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            unfocusedBorderColor = Color.Transparent
+                        )
+                    )
+                }
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 
@@ -110,18 +171,17 @@ fun HabitBottomSheet(
                 Button(
                     onClick = {
                         val goalInt = goal.toIntOrNull() ?: 0
+                        val streakInt = streak.toIntOrNull() ?: 0
+                        val streakGoalInt = streakGoal.toIntOrNull() ?: 0
                         if (title.isNotBlank() && goalInt > 0 && unit.isNotBlank()) {
-                            onSave(title, goalInt, unit, selectedColor)
-                            title = ""
-                            goal = ""
-                            unit = ""
+                            onSave(title, goalInt, unit, selectedColor, streakInt, streakGoalInt)
                             onDismissSheet()
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(58.dp),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
                 ) {
-                    Text(text = "Começar Hábito", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = if (initialHabit == null) "Começar Hábito" else "Salvar Alterações", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(48.dp))
             }

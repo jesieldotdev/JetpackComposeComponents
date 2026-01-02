@@ -42,6 +42,7 @@ data class Habit(
     val unit: String,
     val color: String? = null,
     val lastUpdatedDay: Long? = null,
-    val streak: Int = 0, // Current consecutive days completed
-    val lastCompletedDay: Long? = null // To track the streak logic
+    val streak: Int = 0,
+    val streakGoal: Int = 0, // Meta de dias consecutivos
+    val lastCompletedDay: Long? = null
 )
