@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 fun AppDrawer(
     isKanbanMode: Boolean,
     onToggleKanban: () -> Unit,
+    onNavigateToHome: () -> Unit, // Added missing parameter
+    onNavigateToHabits: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToAbout: () -> Unit
 ) {
@@ -33,6 +35,24 @@ fun AppDrawer(
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Navigation Options
+        DrawerItem(
+            label = "Tarefas",
+            icon = Icons.Default.Home,
+            onClick = onNavigateToHome
+        )
+
+        DrawerItem(
+            label = "Hábitos",
+            icon = Icons.Default.DateRange,
+            onClick = onNavigateToHabits
+        )
+
+        HorizontalDivider(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), 
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.05f)
+        )
+
         DrawerItem(
             label = if (isKanbanMode) "Ver em Lista" else "Modo Kanban (Pro)",
             icon = if (isKanbanMode) Icons.Default.List else Icons.Default.Refresh,

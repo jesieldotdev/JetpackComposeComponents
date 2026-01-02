@@ -19,15 +19,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.jesiel.myapplication.ui.screens.AboutScreen
-import com.jesiel.myapplication.ui.screens.HomeScreen
-import com.jesiel.myapplication.ui.screens.LoginScreen
-import com.jesiel.myapplication.ui.screens.SettingsScreen
-import com.jesiel.myapplication.ui.screens.TaskDetailScreen
+import com.jesiel.myapplication.ui.screens.*
 import com.jesiel.myapplication.ui.theme.myTodosTheme
-import com.jesiel.myapplication.viewmodel.AppTheme
-import com.jesiel.myapplication.viewmodel.ThemeViewModel
-import com.jesiel.myapplication.viewmodel.TodoViewModel
+import com.jesiel.myapplication.viewmodel.*
 
 class MainActivity : ComponentActivity() {
 
@@ -76,6 +70,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation(themeViewModel: ThemeViewModel) {
     val navController = rememberNavController()
     val todoViewModel: TodoViewModel = viewModel()
+    val habitViewModel: HabitViewModel = viewModel()
     val uiState by todoViewModel.uiState.collectAsState()
 
     NavHost(
@@ -87,6 +82,7 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
         composable("home") { 
             HomeScreen(
                 todoViewModel = todoViewModel,
+                themeViewModel = themeViewModel,
                 onNavigateToDetail = { taskId -> 
                     navController.navigate("detail/$taskId") 
                 },
@@ -95,6 +91,9 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
                 },
                 onNavigateToSettings = {
                     navController.navigate("settings")
+                },
+                onNavigateToHabits = {
+                    navController.navigate("habits")
                 }
             ) 
         }
@@ -123,6 +122,25 @@ fun AppNavigation(themeViewModel: ThemeViewModel) {
                 todoViewModel = todoViewModel,
                 themeViewModel = themeViewModel,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("habits") {
+            HabitScreen(
+                habitViewModel = habitViewModel,
+                todoViewModel = todoViewModel,
+                themeViewModel = themeViewModel,
+                onNavigateToHome = {
+                    navController.navigate("home") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                },
+                onNavigateToSettings = {
+                    navController.navigate("settings")
+                },
+                onNavigateToAbout = {
+                    navController.navigate("about")
+                }
             )
         }
     }

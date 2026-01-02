@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -40,7 +39,8 @@ fun HomeScreen(
     themeViewModel: ThemeViewModel = viewModel(),
     onNavigateToDetail: (Int) -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToAbout: () -> Unit = {}
+    onNavigateToAbout: () -> Unit = {},
+    onNavigateToHabits: () -> Unit = {}
 ) {
     val uiState by todoViewModel.uiState.collectAsState()
     val themeState by themeViewModel.themeState.collectAsState()
@@ -82,6 +82,8 @@ fun HomeScreen(
                                 themeViewModel.setKanbanMode(!themeState.isKanbanMode)
                             }
                         },
+                        onNavigateToHome = { scope.launch { drawerState.close() } }, // Already at home
+                        onNavigateToHabits = onNavigateToHabits,
                         onNavigateToSettings = onNavigateToSettings,
                         onNavigateToAbout = onNavigateToAbout
                     )
@@ -151,6 +153,7 @@ fun HomeContent(
     contentPadding: PaddingValues
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
+    val context = LocalContext.current
     
     var selectedCategory by remember { mutableStateOf("Tudo") }
     val categories = remember(uiState.tasks) {
@@ -164,11 +167,9 @@ fun HomeContent(
     }
 
     Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
-        // Show background image only if enabled
         if (uiState.showBackgroundImage) {
             BlurredBackground(imageUrl = uiState.backgroundImageUrl, blurIntensity = uiState.blurIntensity)
         } else {
-            // Fallback background color when image is disabled
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
         }
 
@@ -194,7 +195,9 @@ fun HomeContent(
             }
         }
 
-        PullRefreshIndicator(uiState.isLoading, pullRefreshState, Modifier.align(Alignment.TopCenter))
+        PullRefreshIndicator(uiState.isLoading, pullRefreshState, Modifier.align(Alignment.TopCenter)
+        )
+
         ExampleBottomSheet(showSheet, onDismissSheet, null, onSaveTodo)
     }
 }
