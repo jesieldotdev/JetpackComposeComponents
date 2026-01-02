@@ -39,19 +39,26 @@ class HabitViewModel : ViewModel() {
                 val todayEpoch = today.toEpochDay()
 
                 val processedHabits = habits.map { habit ->
-                    val lastUpdate = habit.lastUpdatedDay?.let { LocalDate.ofEpochDay(it) }
+                    var currentHabit = habit
                     
-                    val shouldReset = when (habit.period) {
-                        HabitPeriod.DAILY -> todayEpoch != habit.lastUpdatedDay
+                    // Sincroniza completedDays se já estiver concluído hoje mas a lista estiver vazia
+                    if (currentHabit.currentProgress >= currentHabit.goal && !currentHabit.completedDays.contains(todayEpoch)) {
+                        currentHabit = currentHabit.copy(completedDays = currentHabit.completedDays + todayEpoch)
+                    }
+
+                    val lastUpdate = currentHabit.lastUpdatedDay?.let { LocalDate.ofEpochDay(it) }
+                    
+                    val shouldReset = when (currentHabit.period) {
+                        HabitPeriod.DAILY -> todayEpoch != currentHabit.lastUpdatedDay
                         HabitPeriod.WEEKLY -> lastUpdate?.let { ChronoUnit.WEEKS.between(it, today) >= 1 } ?: true
                         HabitPeriod.MONTHLY -> lastUpdate?.let { ChronoUnit.MONTHS.between(it, today) >= 1 } ?: true
                     }
 
                     if (shouldReset) {
                         val yesterdayEpoch = todayEpoch - 1
-                        val newStreak = if (habit.lastCompletedDay == yesterdayEpoch || habit.period != HabitPeriod.DAILY) habit.streak else 0
-                        habit.copy(currentProgress = 0, lastUpdatedDay = todayEpoch, streak = newStreak)
-                    } else habit
+                        val newStreak = if (currentHabit.lastCompletedDay == yesterdayEpoch || currentHabit.period != HabitPeriod.DAILY) currentHabit.streak else 0
+                        currentHabit.copy(currentProgress = 0, lastUpdatedDay = todayEpoch, streak = newStreak)
+                    } else currentHabit
                 }
 
                 if (processedHabits != habits) {
@@ -73,20 +80,19 @@ class HabitViewModel : ViewModel() {
             val updatedHabits = currentHabits.map { habit ->
                 if (habit.id == habitId) {
                     val nextProgress = habit.currentProgress + 1
-                    if (nextProgress <= habit.goal) {
-                        val isNowCompleted = nextProgress == habit.goal
-                        val newCompletedDays = if (isNowCompleted && !habit.completedDays.contains(todayEpoch)) {
-                            habit.completedDays + todayEpoch
-                        } else habit.completedDays
-                        
-                        habit.copy(
-                            currentProgress = nextProgress,
-                            lastUpdatedDay = todayEpoch,
-                            streak = if (isNowCompleted) habit.streak + 1 else habit.streak,
-                            lastCompletedDay = if (isNowCompleted) todayEpoch else habit.lastCompletedDay,
-                            completedDays = newCompletedDays
-                        )
-                    } else habit
+                    val isNowCompleted = nextProgress >= habit.goal
+                    
+                    val newCompletedDays = if (isNowCompleted && !habit.completedDays.contains(todayEpoch)) {
+                        habit.completedDays + todayEpoch
+                    } else habit.completedDays
+                    
+                    habit.copy(
+                        currentProgress = if (nextProgress <= habit.goal) nextProgress else habit.goal,
+                        lastUpdatedDay = todayEpoch,
+                        streak = if (isNowCompleted && habit.lastCompletedDay != todayEpoch) habit.streak + 1 else habit.streak,
+                        lastCompletedDay = if (isNowCompleted) todayEpoch else habit.lastCompletedDay,
+                        completedDays = newCompletedDays
+                    )
                 } else habit
             }
 
