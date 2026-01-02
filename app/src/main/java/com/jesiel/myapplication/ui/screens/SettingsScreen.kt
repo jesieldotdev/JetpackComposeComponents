@@ -3,6 +3,9 @@ package com.jesiel.myapplication.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +22,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,6 +54,17 @@ fun SettingsScreen(
     val themeState by themeViewModel.themeState.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
     var showFontDialog by remember { mutableStateOf(false) }
+
+    // Launcher para selecionar imagem da galeria
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            uri?.let {
+                // Persiste a URI da imagem selecionada
+                todoViewModel.updateBackgroundImage(it.toString())
+            }
+        }
+    )
 
     val themeLabel = when (themeState.theme) {
         AppTheme.LIGHT -> "Claro"
@@ -245,10 +260,26 @@ fun SettingsScreen(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
                         )
+
+                        SettingsClickableItem(
+                            title = "Escolher da Galeria",
+                            subtitle = "Use uma foto sua como fundo",
+                            icon = Icons.Default.Add,
+                            onClick = { 
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }
+                        )
+                        
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+                        )
                         
                         SettingsClickableItem(
-                            title = "Trocar Imagem",
-                            subtitle = "Sorteia um novo papel de parede",
+                            title = "Trocar por Aleatória",
+                            subtitle = "Sorteia um novo papel de parede online",
                             icon = Icons.Default.Refresh,
                             onClick = { todoViewModel.refreshBackgroundImage() }
                         )

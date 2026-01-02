@@ -71,10 +71,13 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
                 selectedCategory = savedCategory
             ) }
 
-            if (savedUrl.isEmpty() || lastUpdateDay != today) {
+            // Se for uma URL do picsum e o dia mudou, atualiza. Se for URI da galeria (file/content), mantém.
+            if (savedUrl.contains("picsum.photos") && lastUpdateDay != today) {
                 refreshBackgroundImage()
-            } else {
+            } else if (savedUrl.isNotEmpty()) {
                 _uiState.update { it.copy(backgroundImageUrl = savedUrl) }
+            } else {
+                refreshBackgroundImage()
             }
         }
     }
@@ -90,8 +93,15 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val today = LocalDate.now().toEpochDay()
             val randomUrl = "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}"
-            _uiState.update { it.copy(backgroundImageUrl = randomUrl) }
-            preferenceManager.setBackgroundImage(randomUrl, today)
+            updateBackgroundImage(randomUrl)
+        }
+    }
+    
+    fun updateBackgroundImage(url: String) {
+        viewModelScope.launch {
+            val today = LocalDate.now().toEpochDay()
+            _uiState.update { it.copy(backgroundImageUrl = url) }
+            preferenceManager.setBackgroundImage(url, today)
         }
     }
 
