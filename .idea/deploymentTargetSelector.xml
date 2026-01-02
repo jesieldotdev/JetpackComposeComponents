@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2026-01-02T07:36:25.538352548Z">
+        <DropdownSelection timestamp="2026-01-02T07:51:22.525553704Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/zorin/.var/app/com.google.AndroidStudio/config/.android/avd/Pixel_9_Pro_XL.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=MZQK8D7PJNMJTOJF" />
             </handle>
           </Target>
         </DropdownSelection>

@@ -15,18 +15,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jesiel.myapplication.viewmodel.HabitViewModel
 import com.jesiel.myapplication.viewmodel.TodoViewModel
 import kotlinx.coroutines.delay
+import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
-
-fun getFormattedDate(): String {
-    val currentDate = LocalDate.now()
-    val locale = Locale("pt", "BR")
-    val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM", locale)
-    return currentDate.format(formatter)
-}
 
 fun getDayOfWeekText(): String {
     val currentDate = LocalDate.now()
@@ -52,8 +48,43 @@ fun Header(
     val todoState by todoViewModel.uiState.collectAsState()
     val habitState by habitViewModel.uiState.collectAsState()
 
+    // Estado para manter o horário e data atualizados
+    var currentDateTime by remember { mutableStateOf(LocalDateTime.now()) }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentDateTime = LocalDateTime.now()
+            delay(1000 * 60) // Atualiza a cada minuto
+        }
+    }
+
+    val formattedInfo = remember(currentDateTime) {
+        val locale = Locale("pt", "BR")
+        val datePart = currentDateTime.format(DateTimeFormatter.ofPattern("E, d 'de' MMM", locale))
+        val timePart = currentDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        "${getGreetingText()} • ${datePart.replaceFirstChar { it.uppercase() }} • $timePart"
+    }
+
     val marqueeText = remember(todoState.tasks, habitState.habits) {
         val infos = mutableListOf<String>()
+        
+        val now = System.currentTimeMillis()
+        val nextReminder = todoState.tasks
+            .filter { !it.done && it.reminder != null && it.reminder > now }
+            .minByOrNull { it.reminder!! }
+        
+        if (nextReminder != null) {
+            val reminderDT = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(nextReminder.reminder!!),
+                ZoneId.systemDefault()
+            )
+            val dayName = reminderDT.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+            val timeStr = reminderDT.format(DateTimeFormatter.ofPattern("HH:mm"))
+            val dateStr = reminderDT.format(DateTimeFormatter.ofPattern("dd/MM"))
+            
+            infos.add("você tem um lembrete para: ${nextReminder.title} ($dayName, $dateStr às $timeStr)")
+        }
+
         val pendingCount = todoState.tasks.count { !it.done }
         if (pendingCount > 0) infos.add("você tem $pendingCount tarefas pendentes")
         
@@ -66,21 +97,21 @@ fun Header(
 
     var showDay by remember { mutableStateOf(true) }
 
-    // Ciclo: 2s dia da semana -> 10s letreiro -> repeat
     LaunchedEffect(marqueeText) {
         while (true) {
             showDay = true
-            delay(2000)
+            delay(4000)
             showDay = false
-            delay(14000) // Tempo suficiente para o letreiro passar
+            delay(14000)
         }
     }
 
     Column(modifier = modifier) {
         Text(
-            text = "${getGreetingText()} • ${getFormattedDate()}",
+            text = formattedInfo,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            fontWeight = FontWeight.Medium
         )
         
         Box(
@@ -104,8 +135,8 @@ fun Header(
                 } else {
                     Text(
                         text = "• $marqueeText • $marqueeText",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         modifier = Modifier
