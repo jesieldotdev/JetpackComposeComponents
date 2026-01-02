@@ -10,22 +10,28 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.jesiel.myapplication.viewmodel.AppFont
 
+// Cores padrão LARANJA para quando as cores dinâmicas estiverem DESATIVADAS
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Color(0xFFFFB74D),      // Laranja Claro
+    secondary = Color(0xFFFFA726),
+    tertiary = Color(0xFFFF8A65),
+    background = Color(0xFF121212),
+    surface = Color(0xFF121212),
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = Color(0xFFF57C00),     // Laranja Vibrante
+    secondary = Color(0xFFFB8C00),
+    tertiary = Color(0xFFFF9800),
+    background = Color(0xFFFFFBFE),
+    surface = Color(0xFFFFFBFE),
 )
 
 @Composable
@@ -36,19 +42,23 @@ fun myTodosTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
+        // Se dynamicColor for true e o Android for 12+, usa as cores do sistema (Material You)
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
+        // Caso contrário, usa as cores LARANJA definidas acima
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+    
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            window.statusBarColor = Color.Transparent.toArgb()
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !darkTheme
         }
     }
 
