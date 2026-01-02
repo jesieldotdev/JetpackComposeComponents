@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
+import com.jesiel.myapplication.viewmodel.AppFont
 import com.jesiel.myapplication.viewmodel.AppTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -23,6 +24,7 @@ class PreferenceManager(private val context: Context) {
         val SHOW_BACKGROUND_IMAGE = booleanPreferencesKey("show_background_image")
         val SELECTED_TASK_CATEGORY = stringPreferencesKey("selected_task_category")
         val SELECTED_HABIT_CATEGORY = stringPreferencesKey("selected_habit_category")
+        val APP_FONT = stringPreferencesKey("app_font")
     }
 
     val theme: Flow<AppTheme> = context.dataStore.data.map { preferences ->
@@ -64,6 +66,11 @@ class PreferenceManager(private val context: Context) {
 
     val selectedHabitCategory: Flow<String> = context.dataStore.data.map { preferences ->
         preferences[Keys.SELECTED_HABIT_CATEGORY] ?: "Tudo"
+    }
+
+    val font: Flow<AppFont> = context.dataStore.data.map { preferences ->
+        val fontName = preferences[Keys.APP_FONT] ?: AppFont.POPPINS.name
+        AppFont.valueOf(fontName)
     }
 
     suspend fun setTheme(theme: AppTheme) {
@@ -118,6 +125,12 @@ class PreferenceManager(private val context: Context) {
     suspend fun setSelectedHabitCategory(category: String) {
         context.dataStore.edit { preferences ->
             preferences[Keys.SELECTED_HABIT_CATEGORY] = category
+        }
+    }
+
+    suspend fun setFont(font: AppFont) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.APP_FONT] = font.name
         }
     }
 }

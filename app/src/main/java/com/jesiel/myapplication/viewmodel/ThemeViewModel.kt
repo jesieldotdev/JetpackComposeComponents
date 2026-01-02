@@ -11,11 +11,16 @@ enum class AppTheme {
     LIGHT, DARK, SYSTEM
 }
 
+enum class AppFont {
+    SYSTEM, POPPINS, MONOSPACE, SERIF
+}
+
 data class ThemeState(
     val theme: AppTheme = AppTheme.SYSTEM,
     val useDynamicColors: Boolean = true,
     val isKanbanMode: Boolean = false,
-    val isUserPro: Boolean = false // Added missing field
+    val isUserPro: Boolean = false,
+    val font: AppFont = AppFont.POPPINS
 )
 
 class ThemeViewModel(application: Application) : AndroidViewModel(application) {
@@ -25,17 +30,17 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
     val themeState: StateFlow<ThemeState> = _themeState.asStateFlow()
 
     init {
-        // Load saved preferences
         viewModelScope.launch {
             combine(
-                preferenceManager.theme, 
+                preferenceManager.theme,
                 preferenceManager.useDynamicColors,
                 preferenceManager.isKanbanMode,
-                preferenceManager.isUserPro // Added missing preference
-            ) { theme, dynamic, kanban, pro ->
-                ThemeState(theme, dynamic, kanban, pro)
-            }.collect { newState ->
-                _themeState.value = newState
+                preferenceManager.isUserPro,
+                preferenceManager.font
+            ) { theme, dynamicColors, kanbanMode, isPro, font ->
+                ThemeState(theme, dynamicColors, kanbanMode, isPro, font)
+            }.collect {
+                _themeState.value = it
             }
         }
     }
@@ -58,10 +63,15 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // Added missing function
     fun setUserPro(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.setUserPro(enabled)
+        }
+    }
+
+    fun setFont(font: AppFont) {
+        viewModelScope.launch {
+            preferenceManager.setFont(font)
         }
     }
 }

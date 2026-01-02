@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.jesiel.myapplication.viewmodel.AppFont
 import com.jesiel.myapplication.viewmodel.AppTheme
 import com.jesiel.myapplication.viewmodel.ThemeViewModel
 import com.jesiel.myapplication.viewmodel.TodoViewModel
@@ -47,11 +49,19 @@ fun SettingsScreen(
     val uiState by todoViewModel.uiState.collectAsState()
     val themeState by themeViewModel.themeState.collectAsState()
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showFontDialog by remember { mutableStateOf(false) }
 
     val themeLabel = when (themeState.theme) {
         AppTheme.LIGHT -> "Claro"
         AppTheme.DARK -> "Escuro"
         AppTheme.SYSTEM -> "Padrão do sistema"
+    }
+
+    val fontLabel = when (themeState.font) {
+        AppFont.SYSTEM -> "Sistema"
+        AppFont.POPPINS -> "Poppins"
+        AppFont.MONOSPACE -> "Monospace"
+        AppFont.SERIF -> "Serif"
     }
 
     if (showThemeDialog) {
@@ -84,6 +94,42 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showThemeDialog = false }) { Text("Fechar") }
+            },
+            shape = RoundedCornerShape(28.dp)
+        )
+    }
+
+    if (showFontDialog) {
+        AlertDialog(
+            onDismissRequest = { showFontDialog = false },
+            title = { Text("Escolha a Fonte") },
+            text = {
+                Column {
+                    listOf(
+                        "Sistema" to AppFont.SYSTEM,
+                        "Poppins" to AppFont.POPPINS,
+                        "Monospace" to AppFont.MONOSPACE,
+                        "Serif" to AppFont.SERIF
+                    ).forEach { (label, font) ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { 
+                                    themeViewModel.setFont(font)
+                                    showFontDialog = false 
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(selected = (font == themeState.font), onClick = null)
+                            Spacer(Modifier.width(12.dp))
+                            Text(label)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showFontDialog = false }) { Text("Fechar") }
             },
             shape = RoundedCornerShape(28.dp)
         )
@@ -164,6 +210,18 @@ fun SettingsScreen(
                         subtitle = themeLabel,
                         icon = Icons.Default.Create,
                         onClick = { showThemeDialog = true }
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+                    )
+
+                    SettingsClickableItem(
+                        title = "Tipografia",
+                        subtitle = fontLabel,
+                        icon = Icons.Default.Face,
+                        onClick = { showFontDialog = true }
                     )
                 }
 

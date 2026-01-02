@@ -7,6 +7,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.R
+import com.jesiel.myapplication.viewmodel.AppFont
 
 val Poppins = FontFamily(
     Font(R.font.poppins_regular, FontWeight.Normal),
@@ -14,20 +15,29 @@ val Poppins = FontFamily(
     Font(R.font.poppins_semibold, FontWeight.SemiBold)
 )
 
-val Typography = Typography(
-    displayLarge = TextStyle(fontFamily = Poppins),
-    displayMedium = TextStyle(fontFamily = Poppins),
-    displaySmall = TextStyle(fontFamily = Poppins),
-    headlineLarge = TextStyle(fontFamily = Poppins),
-    headlineMedium = TextStyle(fontFamily = Poppins),
-    headlineSmall = TextStyle(fontFamily = Poppins),
-    titleLarge = TextStyle(fontFamily = Poppins),
-    titleMedium = TextStyle(fontFamily = Poppins),
-    titleSmall = TextStyle(fontFamily = Poppins),
-    bodyLarge = TextStyle(fontFamily = Poppins),
-    bodyMedium = TextStyle(fontFamily = Poppins),
-    bodySmall = TextStyle(fontFamily = Poppins),
-    labelLarge = TextStyle(fontFamily = Poppins),
-    labelMedium = TextStyle(fontFamily = Poppins),
-    labelSmall = TextStyle(fontFamily = Poppins)
-)
+fun getTypography(appFont: AppFont): Typography {
+    val fontFamily = when (appFont) {
+        AppFont.SYSTEM -> FontFamily.Default
+        AppFont.POPPINS -> Poppins
+        AppFont.MONOSPACE -> FontFamily.Monospace
+        AppFont.SERIF -> FontFamily.Serif
+    }
+
+    return Typography(
+        displayLarge = TextStyle(fontFamily = fontFamily),
+        displayMedium = TextStyle(fontFamily = fontFamily),
+        displaySmall = TextStyle(fontFamily = fontFamily),
+        headlineLarge = TextStyle(fontFamily = fontFamily),
+        headlineMedium = TextStyle(fontFamily = fontFamily),
+        headlineSmall = TextStyle(fontFamily = fontFamily),
+        titleLarge = TextStyle(fontFamily = fontFamily),
+        titleMedium = TextStyle(fontFamily = fontFamily),
+        titleSmall = TextStyle(fontFamily = fontFamily),
+        bodyLarge = TextStyle(fontFamily = fontFamily),
+        bodyMedium = TextStyle(fontFamily = fontFamily),
+        bodySmall = TextStyle(fontFamily = fontFamily),
+        labelLarge = TextStyle(fontFamily = fontFamily),
+        labelMedium = TextStyle(fontFamily = fontFamily),
+        labelSmall = TextStyle(fontFamily = fontFamily)
+    )
+}

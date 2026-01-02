@@ -52,7 +52,8 @@ class MainActivity : ComponentActivity() {
 
             myTodosTheme(
                 darkTheme = useDarkTheme,
-                dynamicColor = themeState.useDynamicColors
+                dynamicColor = themeState.useDynamicColors,
+                appFont = themeState.font
             ) {
                 AppNavigation(themeViewModel = themeViewModel, intent = currentIntent)
             }
@@ -86,7 +87,6 @@ fun AppNavigation(themeViewModel: ThemeViewModel, intent: Intent?) {
         intent?.let {
             val taskId = it.getIntExtra("navigate_to_task_id", -1)
             if (taskId != -1) {
-                // Clear the extra to avoid navigating again on recomposition if intent stays
                 it.removeExtra("navigate_to_task_id")
                 navController.navigate("detail/$taskId") {
                     popUpTo("home")
