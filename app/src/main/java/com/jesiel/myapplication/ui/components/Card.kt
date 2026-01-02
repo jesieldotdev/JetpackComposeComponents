@@ -1,7 +1,6 @@
 package com.jesiel.myapplication.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -110,7 +109,6 @@ fun Card(
     ) {
         TaskContent(
             task = task, 
-            onToggleStatus = onToggleStatus,
             modifier = Modifier.clickable { onClick() }
         )
     }
@@ -119,38 +117,28 @@ fun Card(
 @Composable
 private fun TaskContent(
     task: Task, 
-    onToggleStatus: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp)),
-        color = MaterialTheme.colorScheme.surfaceVariant, // Solid color for better visibility
-        tonalElevation = 2.dp, // Adds distinct Material 3 look
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp,
     ) {
-        Row(
-            modifier = Modifier.padding(end = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Color indicator stripe
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+            // Color indicator stripe - fills the entire height
             Box(
                 modifier = Modifier
                     .width(6.dp)
-                    .height(80.dp)
+                    .fillMaxHeight()
                     .background(task.color?.toColor() ?: Color.Transparent)
-            )
-
-            Checkbox(
-                checked = task.done,
-                onCheckedChange = { onToggleStatus(task.id) },
-                modifier = Modifier.padding(start = 8.dp)
             )
 
             Column (
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .weight(1f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start
             ){
