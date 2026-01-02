@@ -81,7 +81,8 @@ fun TimelineItem(
     isFirst: Boolean,
     isLast: Boolean
 ) {
-    val taskColor = task.color?.toColor() ?: MaterialTheme.colorScheme.primary
+    // Agora usando a cor de destaque (Primary) para a timeline
+    val accentColor = MaterialTheme.colorScheme.primary
     val contentAlpha = if (task.done) 0.5f else 1f
 
     Row(
@@ -99,8 +100,8 @@ fun TimelineItem(
             Box(
                 modifier = Modifier
                     .width(2.dp)
-                    .height(24.dp) // Height to the center of the circle area
-                    .background(if (isFirst) Color.Transparent else taskColor.copy(alpha = 0.3f))
+                    .height(24.dp)
+                    .background(if (isFirst) Color.Transparent else accentColor.copy(alpha = 0.3f))
             )
             
             // Circle with outer ring effect
@@ -109,10 +110,10 @@ fun TimelineItem(
                     .size(18.dp)
                     .clip(CircleShape)
                     .clickable { onToggleTaskStatus(task.id) }
-                    .border(2.dp, taskColor, CircleShape)
+                    .border(2.dp, accentColor, CircleShape)
                     .padding(4.dp)
                     .clip(CircleShape)
-                    .background(if (task.done) taskColor else Color.Transparent),
+                    .background(if (task.done) accentColor else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {}
             
@@ -120,8 +121,8 @@ fun TimelineItem(
             Box(
                 modifier = Modifier
                     .width(2.dp)
-                    .weight(1f) // Takes the rest of the height
-                    .background(if (isLast) Color.Transparent else taskColor.copy(alpha = 0.3f))
+                    .weight(1f)
+                    .background(if (isLast) Color.Transparent else accentColor.copy(alpha = 0.3f))
             )
         }
 
