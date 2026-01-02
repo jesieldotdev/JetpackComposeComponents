@@ -26,6 +26,7 @@ import com.jesiel.myapplication.data.Habit
 import com.jesiel.myapplication.ui.components.common.BlurredBackground
 import com.jesiel.myapplication.ui.components.detail.DetailTopBar
 import com.jesiel.myapplication.ui.components.form.HabitBottomSheet
+import com.jesiel.myapplication.ui.components.habit.WeeklyProgressRow
 import com.jesiel.myapplication.ui.components.toColor
 import com.jesiel.myapplication.viewmodel.HabitViewModel
 import com.jesiel.myapplication.viewmodel.TodoViewModel
@@ -255,7 +256,8 @@ fun HabitDetailScreen(
                                         Text(
                                             "Ofensiva Concluída",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Bold
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Text(
                                             "Meta atingida com sucesso",
@@ -289,52 +291,4 @@ fun HabitDetailScreen(
     }
 }
 
-@Composable
-fun WeeklyProgressRow(habit: Habit) {
-    val today = LocalDate.now()
-    val habitColor = habit.color?.toColor() ?: MaterialTheme.colorScheme.primary
-    
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        for (i in 6 downTo 0) {
-            val date = today.minusDays(i.toLong())
-            val isCompleted = habit.completedDays.contains(date.toEpochDay())
-            val dayInitial = date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault())
-            
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = dayInitial,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (i == 0) habitColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    fontWeight = if (i == 0) FontWeight.Bold else FontWeight.Normal
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isCompleted) habitColor else Color.Transparent
-                        )
-                        .border(
-                            width = 2.dp,
-                            color = if (isCompleted) habitColor else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isCompleted) {
-                        Icon(
-                            Icons.Default.Check, 
-                            null, 
-                            tint = Color.White, 
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
+
