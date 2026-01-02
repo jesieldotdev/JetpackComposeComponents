@@ -1,40 +1,24 @@
 package com.jesiel.myapplication.ui.components
 
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
-import android.content.Intent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.data.Task
-import com.jesiel.myapplication.viewmodel.ReminderReceiver
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
+import com.jesiel.myapplication.ui.components.form.ColorPicker
+import com.jesiel.myapplication.ui.components.form.ReminderSelector
+import com.jesiel.myapplication.ui.components.form.TaskInputField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,56 +113,19 @@ fun ExampleBottomSheet(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                SettingsActionItem(
-                    label = if (reminderTime != null) {
-                        val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(reminderTime!!), ZoneId.systemDefault())
-                        "Lembrete: ${ldt.format(DateTimeFormatter.ofPattern("dd/MM HH:mm"))}"
-                    } else {
-                        "Adicionar um lembrete"
-                    },
-                    icon = Icons.Default.Notifications,
-                    isActive = reminderTime != null,
-                    onClick = {
-                        val currentDateTime = Calendar.getInstance()
-                        if (reminderTime != null) currentDateTime.timeInMillis = reminderTime!!
-                        DatePickerDialog(context, { _, y, m, d ->
-                            TimePickerDialog(context, { _, hh, mm ->
-                                val cal = Calendar.getInstance().apply { set(y, m, d, hh, mm) }
-                                reminderTime = cal.timeInMillis
-                                
-                                val ldt = LocalDateTime.ofInstant(Instant.ofEpochMilli(reminderTime!!), ZoneId.systemDefault())
-                                val formatted = ldt.format(DateTimeFormatter.ofPattern("dd/MM 'às' HH:mm"))
-                                val testIntent = Intent(context, ReminderReceiver::class.java).apply {
-                                    putExtra("task_title", "Lembrete definido para $formatted")
-                                }
-                                context.sendBroadcast(testIntent)
-                            }, currentDateTime.get(Calendar.HOUR_OF_DAY), currentDateTime.get(Calendar.MINUTE), true).show()
-                        }, currentDateTime.get(Calendar.YEAR), currentDateTime.get(Calendar.MONTH), currentDateTime.get(Calendar.DAY_OF_MONTH)).show()
-                    }
+                ReminderSelector(
+                    context = context,
+                    reminderTime = reminderTime,
+                    onReminderSelected = { reminderTime = it }
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                Text("Prioridade Visual (Cor)", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    colors.forEach { hex ->
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(Color(android.graphics.Color.parseColor(hex)))
-                                .border(
-                                    width = if (selectedColor == hex) 3.dp else 0.dp,
-                                    color = if (selectedColor == hex) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    shape = CircleShape
-                                )
-                                .clickable { selectedColor = hex }
-                        )
-                    }
-                }
+                ColorPicker(
+                    colors = colors,
+                    selectedColor = selectedColor,
+                    onColorSelected = { selectedColor = it }
+                )
 
                 Spacer(modifier = Modifier.height(40.dp))
                 
@@ -197,54 +144,6 @@ fun ExampleBottomSheet(
                 }
                 Spacer(modifier = Modifier.height(48.dp))
             }
-        }
-    }
-}
-
-@Composable
-fun TaskInputField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    icon: ImageVector,
-    isMultiline: Boolean = false
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        leadingIcon = { Icon(icon, null, tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)) },
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        singleLine = !isMultiline,
-        minLines = if (isMultiline) 4 else 1,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = Color.Transparent
-        )
-    )
-}
-
-@Composable
-fun SettingsActionItem(
-    label: String,
-    icon: ImageVector,
-    isActive: Boolean,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).clickable { onClick() },
-        color = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(imageVector = icon, contentDescription = null, tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(text = label, style = MaterialTheme.typography.bodyLarge, fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium, color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

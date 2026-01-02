@@ -1,15 +1,11 @@
 package com.jesiel.myapplication.viewmodel
 
-import android.app.AlarmManager
 import android.app.Application
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesiel.myapplication.data.PreferenceManager
+import com.jesiel.myapplication.data.ReminderManager
 import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.data.TaskStatus
 import com.jesiel.myapplication.data.TodoRepository
@@ -26,7 +22,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-// Represents the state of the UI
 data class TodoUiState(
     val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = false,
@@ -35,7 +30,6 @@ data class TodoUiState(
     val blurIntensity: Float = 20f
 )
 
-// One-time events to be sent to the UI
 sealed interface UiEvent {
     data class ShowUndoSnackbar(val task: Task) : UiEvent
 }
@@ -44,6 +38,7 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = TodoRepository()
     private val preferenceManager = PreferenceManager(application)
+    private val reminderManager = ReminderManager(application)
 
     private val _uiState = MutableStateFlow(TodoUiState())
     val uiState: StateFlow<TodoUiState> = _uiState.asStateFlow()
@@ -86,14 +81,10 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateBlurIntensity(intensity: Float) {
         _uiState.update { it.copy(blurIntensity = intensity) }
-        viewModelScope.launch {
-            preferenceManager.setBlurIntensity(intensity)
-        }
+        viewModelScope.launch { preferenceManager.setBlurIntensity(intensity) }
     }
 
-    fun refresh() {
-        fetchTodos()
-    }
+    fun refresh() = fetchTodos()
 
     private fun fetchTodos() {
         viewModelScope.launch {
@@ -103,7 +94,6 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { it.copy(tasks = tasks, isLoading = false) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message, isLoading = false) }
-                e.printStackTrace()
             }
         }
     }
@@ -112,35 +102,17 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val newId = (currentTasks.maxOfOrNull { it.id } ?: 0) + 1
+            val currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale("pt", "BR"))).replaceFirstChar { it.uppercase() }
             
-            val formatter = DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale("pt", "BR"))
-            val currentTime = LocalDateTime.now().format(formatter).replaceFirstChar { it.uppercase() }
-            
-            val newTask = Task(
-                id = newId, 
-                title = title, 
-                description = description,
-                category = category,
-                color = color,
-                done = false,
-                status = TaskStatus.PENDING,
-                created = currentTime,
-                reminder = reminder
-            )
-
+            val newTask = Task(id = newId, title = title, description = description, category = category, color = color, done = false, status = TaskStatus.PENDING, created = currentTime, reminder = reminder)
             _uiState.update { it.copy(tasks = currentTasks + newTask) }
 
-            reminder?.let { time ->
-                if (time > System.currentTimeMillis()) {
-                    scheduleNotification(context, time, title, description, newId)
-                }
-            }
+            reminder?.let { if (it > System.currentTimeMillis()) reminderManager.scheduleReminder(it, title, description, newId) }
 
             try {
                 repository.updateTodos(_uiState.value.tasks)
             } catch (e: Exception) {
                 _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
-                e.printStackTrace()
             }
         }
     }
@@ -149,31 +121,17 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val updatedTasks = currentTasks.map {
-                if (it.id == taskId) {
-                    it.copy(
-                        title = title,
-                        description = description,
-                        category = category,
-                        color = color,
-                        reminder = reminder
-                    )
-                } else it
+                if (it.id == taskId) it.copy(title = title, description = description, category = category, color = color, reminder = reminder) else it
             }
-
             _uiState.update { it.copy(tasks = updatedTasks) }
 
-            cancelNotification(context, taskId)
-            reminder?.let { time ->
-                if (time > System.currentTimeMillis()) {
-                    scheduleNotification(context, time, title, description, taskId)
-                }
-            }
+            reminderManager.cancelReminder(taskId)
+            reminder?.let { if (it > System.currentTimeMillis()) reminderManager.scheduleReminder(it, title, description, taskId) }
 
             try {
                 repository.updateTodos(updatedTasks)
             } catch (e: Exception) {
                 _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
-                e.printStackTrace()
             }
         }
     }
@@ -182,69 +140,18 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val updatedTasks = currentTasks.map {
-                if (it.id == taskId) {
-                    it.copy(
-                        status = newStatus,
-                        done = newStatus == TaskStatus.DONE
-                    )
-                } else it
+                if (it.id == taskId) it.copy(status = newStatus, done = newStatus == TaskStatus.DONE) else it
             }
-
             _uiState.update { it.copy(tasks = updatedTasks) }
 
-            if (newStatus == TaskStatus.DONE) {
-                cancelNotification(context, taskId)
-            }
+            if (newStatus == TaskStatus.DONE) reminderManager.cancelReminder(taskId)
 
             try {
                 repository.updateTodos(updatedTasks)
             } catch (e: Exception) {
                 _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
-                e.printStackTrace()
             }
         }
-    }
-
-    private fun scheduleNotification(context: Context, time: Long, title: String, description: String?, id: Int) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!alarmManager.canScheduleExactAlarms()) {
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                context.startActivity(intent)
-                return
-            }
-        }
-
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            putExtra("task_title", title)
-            putExtra("task_description", description)
-        }
-        
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            time,
-            pendingIntent
-        )
-    }
-
-    private fun cancelNotification(context: Context, id: Int) {
-        val intent = Intent(context, ReminderReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.cancel(pendingIntent)
     }
 
     fun toggleTaskStatus(context: Context, taskId: Int) {
@@ -254,31 +161,20 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             val updatedTasks = currentTasks.map {
                 if (it.id == taskId) {
                     isNowDone = !it.done
-                    it.copy(
-                        done = isNowDone,
-                        status = if (isNowDone) TaskStatus.DONE else TaskStatus.PENDING
-                    )
+                    it.copy(done = isNowDone, status = if (isNowDone) TaskStatus.DONE else TaskStatus.PENDING)
                 } else it
             }
-
             _uiState.update { it.copy(tasks = updatedTasks) }
 
-            if (isNowDone) {
-                cancelNotification(context, taskId)
-            } else {
+            if (isNowDone) reminderManager.cancelReminder(taskId) else {
                 val task = updatedTasks.find { it.id == taskId }
-                task?.reminder?.let { time ->
-                    if (time > System.currentTimeMillis()) {
-                        scheduleNotification(context, time, task.title, task.description, taskId)
-                    }
-                }
+                task?.reminder?.let { if (it > System.currentTimeMillis()) reminderManager.scheduleReminder(it, task.title, task.description, taskId) }
             }
 
             try {
                 repository.updateTodos(updatedTasks)
             } catch (e: Exception) {
                 _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
-                e.printStackTrace()
             }
         }
     }
@@ -293,8 +189,7 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun undoDelete(task: Task) {
-        val currentTasks = _uiState.value.tasks
-        _uiState.update { it.copy(tasks = (currentTasks + task).sortedBy { it.id }) }
+        _uiState.update { it.copy(tasks = (_uiState.value.tasks + task).sortedBy { it.id }) }
         lastDeletedTask = null
     }
 
@@ -306,7 +201,6 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
                     lastDeletedTask = null
                 } catch (e: Exception) {
                     fetchTodos()
-                    e.printStackTrace()
                 }
             }
         }
