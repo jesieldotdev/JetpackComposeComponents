@@ -3,6 +3,7 @@ package com.jesiel.myapplication.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesiel.myapplication.data.Habit
+import com.jesiel.myapplication.data.HabitPeriod
 import com.jesiel.myapplication.data.TodoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.util.Calendar
 
 data class HabitUiState(
     val habits: List<Habit> = emptyList(),
@@ -33,13 +36,22 @@ class HabitViewModel : ViewModel() {
             try {
                 val record = repository.getFullRecord()
                 val habits = record.habits
-                val today = LocalDate.now().toEpochDay()
-                val yesterday = today - 1
+                val today = LocalDate.now()
+                val todayEpoch = today.toEpochDay()
 
                 val processedHabits = habits.map { habit ->
-                    if (habit.lastUpdatedDay != today) {
-                        val newStreak = if (habit.lastCompletedDay == yesterday) habit.streak else 0
-                        habit.copy(currentProgress = 0, lastUpdatedDay = today, streak = newStreak)
+                    val lastUpdate = habit.lastUpdatedDay?.let { LocalDate.ofEpochDay(it) }
+                    
+                    val shouldReset = when (habit.period) {
+                        HabitPeriod.DAILY -> todayEpoch != habit.lastUpdatedDay
+                        HabitPeriod.WEEKLY -> lastUpdate?.let { ChronoUnit.WEEKS.between(it, today) >= 1 } ?: true
+                        HabitPeriod.MONTHLY -> lastUpdate?.let { ChronoUnit.MONTHS.between(it, today) >= 1 } ?: true
+                    }
+
+                    if (shouldReset) {
+                        val yesterdayEpoch = todayEpoch - 1
+                        val newStreak = if (habit.lastCompletedDay == yesterdayEpoch || habit.period != HabitPeriod.DAILY) habit.streak else 0
+                        habit.copy(currentProgress = 0, lastUpdatedDay = todayEpoch, streak = newStreak)
                     } else habit
                 }
 
@@ -57,7 +69,7 @@ class HabitViewModel : ViewModel() {
     fun incrementHabit(habitId: Int) {
         viewModelScope.launch {
             val currentHabits = _uiState.value.habits
-            val today = LocalDate.now().toEpochDay()
+            val todayEpoch = LocalDate.now().toEpochDay()
             
             val updatedHabits = currentHabits.map { habit ->
                 if (habit.id == habitId) {
@@ -66,9 +78,9 @@ class HabitViewModel : ViewModel() {
                         val isNowCompleted = nextProgress == habit.goal
                         habit.copy(
                             currentProgress = nextProgress,
-                            lastUpdatedDay = today,
+                            lastUpdatedDay = todayEpoch,
                             streak = if (isNowCompleted) habit.streak + 1 else habit.streak,
-                            lastCompletedDay = if (isNowCompleted) today else habit.lastCompletedDay
+                            lastCompletedDay = if (isNowCompleted) todayEpoch else habit.lastCompletedDay
                         )
                     } else habit
                 } else habit
@@ -85,7 +97,7 @@ class HabitViewModel : ViewModel() {
         }
     }
 
-    fun addHabit(title: String, goal: Int, unit: String, color: String?, streakGoal: Int) {
+    fun addHabit(title: String, goal: Int, unit: String, color: String?, streakGoal: Int, period: HabitPeriod) {
         viewModelScope.launch {
             val currentHabits = _uiState.value.habits
             val newId = (currentHabits.maxOfOrNull { it.id } ?: 0) + 1
@@ -95,6 +107,7 @@ class HabitViewModel : ViewModel() {
                 goal = goal,
                 unit = unit,
                 color = color,
+                period = period,
                 lastUpdatedDay = LocalDate.now().toEpochDay(),
                 streak = 0,
                 streakGoal = streakGoal
@@ -112,7 +125,7 @@ class HabitViewModel : ViewModel() {
         }
     }
 
-    fun updateHabit(habitId: Int, title: String, goal: Int, unit: String, color: String?, streak: Int, streakGoal: Int) {
+    fun updateHabit(habitId: Int, title: String, goal: Int, unit: String, color: String?, streak: Int, streakGoal: Int, period: HabitPeriod) {
         viewModelScope.launch {
             val currentHabits = _uiState.value.habits
             val updatedHabits = currentHabits.map {
@@ -123,7 +136,8 @@ class HabitViewModel : ViewModel() {
                         unit = unit,
                         color = color,
                         streak = streak,
-                        streakGoal = streakGoal
+                        streakGoal = streakGoal,
+                        period = period
                     )
                 } else it
             }

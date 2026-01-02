@@ -9,6 +9,11 @@ enum class TaskStatus {
 }
 
 @Serializable
+enum class HabitPeriod {
+    DAILY, WEEKLY, MONTHLY
+}
+
+@Serializable
 data class ApiResponse(
     val record: TodoRecord
 )
@@ -41,8 +46,9 @@ data class Habit(
     val currentProgress: Int = 0,
     val unit: String,
     val color: String? = null,
+    val period: HabitPeriod = HabitPeriod.DAILY,
     val lastUpdatedDay: Long? = null,
     val streak: Int = 0,
-    val streakGoal: Int = 0, // Meta de dias consecutivos
+    val streakGoal: Int = 0,
     val lastCompletedDay: Long? = null
 )

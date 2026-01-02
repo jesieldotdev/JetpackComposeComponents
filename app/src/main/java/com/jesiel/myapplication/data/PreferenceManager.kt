@@ -20,7 +20,9 @@ class PreferenceManager(private val context: Context) {
         val LAST_IMAGE_UPDATE_DAY = longPreferencesKey("last_image_update_day")
         val KANBAN_MODE = booleanPreferencesKey("kanban_mode")
         val IS_USER_PRO = booleanPreferencesKey("is_user_pro")
-        val SHOW_BACKGROUND_IMAGE = booleanPreferencesKey("show_background_image") // New key
+        val SHOW_BACKGROUND_IMAGE = booleanPreferencesKey("show_background_image")
+        val SELECTED_TASK_CATEGORY = stringPreferencesKey("selected_task_category")
+        val SELECTED_HABIT_CATEGORY = stringPreferencesKey("selected_habit_category")
     }
 
     val theme: Flow<AppTheme> = context.dataStore.data.map { preferences ->
@@ -53,7 +55,15 @@ class PreferenceManager(private val context: Context) {
     }
 
     val showBackgroundImage: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[Keys.SHOW_BACKGROUND_IMAGE] ?: true // Default is true
+        preferences[Keys.SHOW_BACKGROUND_IMAGE] ?: true
+    }
+
+    val selectedTaskCategory: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[Keys.SELECTED_TASK_CATEGORY] ?: "Tudo"
+    }
+
+    val selectedHabitCategory: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[Keys.SELECTED_HABIT_CATEGORY] ?: "Tudo"
     }
 
     suspend fun setTheme(theme: AppTheme) {
@@ -96,6 +106,18 @@ class PreferenceManager(private val context: Context) {
     suspend fun setShowBackgroundImage(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[Keys.SHOW_BACKGROUND_IMAGE] = enabled
+        }
+    }
+
+    suspend fun setSelectedTaskCategory(category: String) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.SELECTED_TASK_CATEGORY] = category
+        }
+    }
+
+    suspend fun setSelectedHabitCategory(category: String) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.SELECTED_HABIT_CATEGORY] = category
         }
     }
 }

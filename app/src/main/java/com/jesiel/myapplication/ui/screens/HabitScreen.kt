@@ -9,9 +9,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jesiel.myapplication.data.Habit
+import com.jesiel.myapplication.data.HabitPeriod
 import com.jesiel.myapplication.ui.components.AppDrawer
 import com.jesiel.myapplication.ui.components.common.BlurredBackground
 import com.jesiel.myapplication.ui.components.form.HabitBottomSheet
@@ -35,7 +41,7 @@ import com.jesiel.myapplication.viewmodel.ThemeViewModel
 import com.jesiel.myapplication.viewmodel.TodoViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun HabitScreen(
     habitViewModel: HabitViewModel = viewModel(),
@@ -53,6 +59,12 @@ fun HabitScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var showAddHabitSheet by remember { mutableStateOf(false) }
+
+    // Pull Refresh State
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = habitState.isLoading,
+        onRefresh = { habitViewModel.fetchHabits() }
+    )
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
@@ -76,7 +88,11 @@ fun HabitScreen(
             }
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pullRefresh(pullRefreshState) // Enabled Pull Refresh
+                ) {
                     if (todoState.showBackgroundImage) {
                         BlurredBackground(
                             imageUrl = todoState.backgroundImageUrl,
@@ -113,32 +129,90 @@ fun HabitScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(habitState.habits, key = { it.id }) { habit ->
-                                    HabitCard(
-                                        habit = habit,
-                                        onIncrement = { habitViewModel.incrementHabit(habit.id) },
-                                        onClick = { onNavigateToHabitDetail(habit.id) }
-                                    )
+                            if (habitState.isLoading && habitState.habits.isEmpty()) {
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator()
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    items(habitState.habits, key = { it.id }) { habit ->
+                                        HabitSwipeItem(
+                                            habit = habit,
+                                            onIncrement = { habitViewModel.incrementHabit(habit.id) },
+                                            onClick = { onNavigateToHabitDetail(habit.id) },
+                                            onDelete = { habitViewModel.deleteHabit(habit.id) }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                     
+                    // Pull Refresh Indicator
+                    PullRefreshIndicator(
+                        refreshing = habitState.isLoading,
+                        state = pullRefreshState,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+
                     HabitBottomSheet(
                         showSheet = showAddHabitSheet,
                         onDismissSheet = { showAddHabitSheet = false },
-                        onSave = { title, goal, unit, color, streak, streakGoal ->
-                            habitViewModel.addHabit(title, goal, unit, color, streakGoal)
+                        onSave = { title, goal, unit, color, streak, streakGoal, period ->
+                            habitViewModel.addHabit(title, goal, unit, color, streakGoal, period)
                         }
                     )
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HabitSwipeItem(
+    habit: Habit,
+    onIncrement: () -> Unit,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = {
+            if (it == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                true
+            } else false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val alignment = Alignment.CenterEnd
+            val color = MaterialTheme.colorScheme.errorContainer
+            val icon = Icons.Default.Delete
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(color)
+                    .padding(horizontal = 24.dp),
+                contentAlignment = alignment
+            ) {
+                Icon(icon, contentDescription = "Excluir", tint = MaterialTheme.colorScheme.onErrorContainer)
+            }
+        },
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true
+    ) {
+        HabitCard(habit = habit, onIncrement = onIncrement, onClick = onClick)
     }
 }
 
@@ -190,8 +264,13 @@ fun HabitCard(
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
+                val periodText = when(habit.period) {
+                    HabitPeriod.DAILY -> "diário"
+                    HabitPeriod.WEEKLY -> "semanal"
+                    HabitPeriod.MONTHLY -> "mensal"
+                }
                 Text(
-                    text = "${habit.currentProgress}/${habit.goal} ${habit.unit}",
+                    text = "${habit.currentProgress}/${habit.goal} ${habit.unit} ($periodText)",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                 )

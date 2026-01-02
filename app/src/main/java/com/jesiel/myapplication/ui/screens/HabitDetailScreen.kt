@@ -186,8 +186,8 @@ fun HabitDetailScreen(
             showSheet = showEditSheet,
             onDismissSheet = { showEditSheet = false },
             initialHabit = habit,
-            onSave = { title, goal, unit, color, streak, streakGoal ->
-                habitViewModel.updateHabit(habit.id, title, goal, unit, color, streak, streakGoal)
+            onSave = { title, goal, unit, color, streak, streakGoal, period ->
+                habitViewModel.updateHabit(habit.id, title, goal, unit, color, streak, streakGoal, period)
                 showEditSheet = false
             }
         )
