@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -122,6 +123,23 @@ fun SettingsScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 
+                // --- SECTION: PRO FEATURE ---
+                SettingsSection(title = "Assinatura") {
+                    SettingsClickableItem(
+                        title = "Versão Pro",
+                        subtitle = if (themeState.isUserPro) "Você já é um usuário Pro! Aproveite o Kanban." else "Desbloqueie o Modo Kanban e mais",
+                        icon = Icons.Default.Star,
+                        trailing = {
+                            Switch(
+                                checked = themeState.isUserPro,
+                                onCheckedChange = { themeViewModel.setUserPro(it) }
+                            )
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
                 SettingsSection(title = "Aparência") {
                     SettingsClickableItem(
                         title = "Cores Dinâmicas",

@@ -14,7 +14,8 @@ enum class AppTheme {
 data class ThemeState(
     val theme: AppTheme = AppTheme.SYSTEM,
     val useDynamicColors: Boolean = true,
-    val isKanbanMode: Boolean = false
+    val isKanbanMode: Boolean = false,
+    val isUserPro: Boolean = false // Added missing field
 )
 
 class ThemeViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,9 +30,10 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
             combine(
                 preferenceManager.theme, 
                 preferenceManager.useDynamicColors,
-                preferenceManager.isKanbanMode
-            ) { theme, dynamic, kanban ->
-                ThemeState(theme, dynamic, kanban)
+                preferenceManager.isKanbanMode,
+                preferenceManager.isUserPro // Added missing preference
+            ) { theme, dynamic, kanban, pro ->
+                ThemeState(theme, dynamic, kanban, pro)
             }.collect { newState ->
                 _themeState.value = newState
             }
@@ -53,6 +55,13 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
     fun setKanbanMode(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.setKanbanMode(enabled)
+        }
+    }
+
+    // Added missing function
+    fun setUserPro(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.setUserPro(enabled)
         }
     }
 }
