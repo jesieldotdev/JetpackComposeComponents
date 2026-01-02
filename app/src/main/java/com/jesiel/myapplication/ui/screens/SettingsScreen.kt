@@ -90,15 +90,17 @@ fun SettingsScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AsyncImage(
-            model = uiState.backgroundImageUrl,
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(uiState.blurIntensity.dp),
-            contentScale = ContentScale.Crop
-        )
-        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = 0.6f)))
+        if (uiState.showBackgroundImage) {
+            AsyncImage(
+                model = uiState.backgroundImageUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(uiState.blurIntensity.dp),
+                contentScale = ContentScale.Crop
+            )
+        }
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background.copy(alpha = if (uiState.showBackgroundImage) 0.6f else 1f)))
 
         Scaffold(
             containerColor = Color.Transparent,
@@ -123,7 +125,6 @@ fun SettingsScreen(
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // --- SECTION: PRO FEATURE ---
                 SettingsSection(title = "Assinatura") {
                     SettingsClickableItem(
                         title = "Versão Pro",
@@ -170,29 +171,48 @@ fun SettingsScreen(
 
                 SettingsSection(title = "Personalização de Fundo") {
                     SettingsClickableItem(
-                        title = "Trocar Imagem",
-                        subtitle = "Sorteia um novo papel de parede",
-                        icon = Icons.Default.Refresh,
-                        onClick = { todoViewModel.refreshBackgroundImage() }
-                    )
-                    
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
-                    )
-                    
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-                            Spacer(Modifier.width(16.dp))
-                            Text("Intensidade do Blur", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        title = "Exibir Imagem",
+                        subtitle = "Ativar ou desativar papel de parede",
+                        icon = Icons.Default.Settings,
+                        trailing = {
+                            Switch(
+                                checked = uiState.showBackgroundImage,
+                                onCheckedChange = { todoViewModel.setShowBackgroundImage(it) }
+                            )
                         }
-                        Slider(
-                            value = uiState.blurIntensity,
-                            onValueChange = { todoViewModel.updateBlurIntensity(it) },
-                            valueRange = 0f..50f,
-                            modifier = Modifier.padding(top = 8.dp)
+                    )
+                    
+                    if (uiState.showBackgroundImage) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
                         )
+                        
+                        SettingsClickableItem(
+                            title = "Trocar Imagem",
+                            subtitle = "Sorteia um novo papel de parede",
+                            icon = Icons.Default.Refresh,
+                            onClick = { todoViewModel.refreshBackgroundImage() }
+                        )
+                        
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+                        )
+                        
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                                Spacer(Modifier.width(16.dp))
+                                Text("Intensidade do Blur", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Slider(
+                                value = uiState.blurIntensity,
+                                onValueChange = { todoViewModel.updateBlurIntensity(it) },
+                                valueRange = 0f..50f,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
                     }
                 }
 

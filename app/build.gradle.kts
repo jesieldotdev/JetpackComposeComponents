@@ -58,6 +58,7 @@ dependencies {
     
     // DataStore for persistent settings
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.compose.foundation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

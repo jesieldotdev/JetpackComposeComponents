@@ -1,5 +1,6 @@
 package com.jesiel.myapplication.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -162,7 +164,13 @@ fun HomeContent(
     }
 
     Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
-        BlurredBackground(imageUrl = uiState.backgroundImageUrl, blurIntensity = uiState.blurIntensity)
+        // Show background image only if enabled
+        if (uiState.showBackgroundImage) {
+            BlurredBackground(imageUrl = uiState.backgroundImageUrl, blurIntensity = uiState.blurIntensity)
+        } else {
+            // Fallback background color when image is disabled
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+        }
 
         if (uiState.isLoading && uiState.tasks.isEmpty()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))

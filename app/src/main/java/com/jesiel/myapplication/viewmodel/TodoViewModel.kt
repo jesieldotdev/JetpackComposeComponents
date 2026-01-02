@@ -1,7 +1,12 @@
 package com.jesiel.myapplication.viewmodel
 
+import android.app.AlarmManager
 import android.app.Application
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesiel.myapplication.data.PreferenceManager
@@ -27,7 +32,8 @@ data class TodoUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val backgroundImageUrl: String = "",
-    val blurIntensity: Float = 20f
+    val blurIntensity: Float = 20f,
+    val showBackgroundImage: Boolean = true // New UI State field
 )
 
 sealed interface UiEvent {
@@ -57,10 +63,14 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val savedBlur = preferenceManager.blurIntensity.first()
             val savedUrl = preferenceManager.backgroundImageUrl.first()
+            val savedShowBg = preferenceManager.showBackgroundImage.first()
             val lastUpdateDay = preferenceManager.lastImageUpdateDay.first()
             val today = LocalDate.now().toEpochDay()
 
-            _uiState.update { it.copy(blurIntensity = savedBlur) }
+            _uiState.update { it.copy(
+                blurIntensity = savedBlur,
+                showBackgroundImage = savedShowBg
+            ) }
 
             if (savedUrl.isEmpty() || lastUpdateDay != today) {
                 refreshBackgroundImage()
@@ -76,6 +86,13 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             val randomUrl = "https://picsum.photos/1000/1800?random=${System.currentTimeMillis()}"
             _uiState.update { it.copy(backgroundImageUrl = randomUrl) }
             preferenceManager.setBackgroundImage(randomUrl, today)
+        }
+    }
+
+    fun setShowBackgroundImage(enabled: Boolean) {
+        _uiState.update { it.copy(showBackgroundImage = enabled) }
+        viewModelScope.launch {
+            preferenceManager.setShowBackgroundImage(enabled)
         }
     }
 

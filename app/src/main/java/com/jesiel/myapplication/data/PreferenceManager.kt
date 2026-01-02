@@ -19,7 +19,8 @@ class PreferenceManager(private val context: Context) {
         val BACKGROUND_IMAGE = stringPreferencesKey("background_image")
         val LAST_IMAGE_UPDATE_DAY = longPreferencesKey("last_image_update_day")
         val KANBAN_MODE = booleanPreferencesKey("kanban_mode")
-        val IS_USER_PRO = booleanPreferencesKey("is_user_pro") // New Pro flag
+        val IS_USER_PRO = booleanPreferencesKey("is_user_pro")
+        val SHOW_BACKGROUND_IMAGE = booleanPreferencesKey("show_background_image") // New key
     }
 
     val theme: Flow<AppTheme> = context.dataStore.data.map { preferences ->
@@ -49,6 +50,10 @@ class PreferenceManager(private val context: Context) {
 
     val isUserPro: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[Keys.IS_USER_PRO] ?: false
+    }
+
+    val showBackgroundImage: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[Keys.SHOW_BACKGROUND_IMAGE] ?: true // Default is true
     }
 
     suspend fun setTheme(theme: AppTheme) {
@@ -85,6 +90,12 @@ class PreferenceManager(private val context: Context) {
     suspend fun setUserPro(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[Keys.IS_USER_PRO] = enabled
+        }
+    }
+
+    suspend fun setShowBackgroundImage(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.SHOW_BACKGROUND_IMAGE] = enabled
         }
     }
 }
