@@ -13,6 +13,8 @@ class ReminderManager(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     fun scheduleReminder(time: Long, title: String, description: String?, id: Int) {
+        if (time <= System.currentTimeMillis()) return
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
@@ -23,6 +25,7 @@ class ReminderManager(private val context: Context) {
         }
 
         val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra("task_id", id)
             putExtra("task_title", title)
             putExtra("task_description", description)
         }

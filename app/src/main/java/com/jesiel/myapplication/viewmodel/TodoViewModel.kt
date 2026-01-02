@@ -1,12 +1,7 @@
 package com.jesiel.myapplication.viewmodel
 
-import android.app.AlarmManager
 import android.app.Application
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.provider.Settings
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesiel.myapplication.data.PreferenceManager
@@ -33,11 +28,13 @@ data class TodoUiState(
     val error: String? = null,
     val backgroundImageUrl: String = "",
     val blurIntensity: Float = 20f,
-    val showBackgroundImage: Boolean = true // New UI State field
+    val showBackgroundImage: Boolean = true,
+    val selectedCategory: String = "Tudo"
 )
 
 sealed interface UiEvent {
     data class ShowUndoSnackbar(val task: Task) : UiEvent
+    data class NavigateToTask(val taskId: Int) : UiEvent
 }
 
 class TodoViewModel(application: Application) : AndroidViewModel(application) {
@@ -64,12 +61,14 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             val savedBlur = preferenceManager.blurIntensity.first()
             val savedUrl = preferenceManager.backgroundImageUrl.first()
             val savedShowBg = preferenceManager.showBackgroundImage.first()
+            val savedCategory = preferenceManager.selectedTaskCategory.first()
             val lastUpdateDay = preferenceManager.lastImageUpdateDay.first()
             val today = LocalDate.now().toEpochDay()
 
             _uiState.update { it.copy(
                 blurIntensity = savedBlur,
-                showBackgroundImage = savedShowBg
+                showBackgroundImage = savedShowBg,
+                selectedCategory = savedCategory
             ) }
 
             if (savedUrl.isEmpty() || lastUpdateDay != today) {
@@ -77,6 +76,13 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 _uiState.update { it.copy(backgroundImageUrl = savedUrl) }
             }
+        }
+    }
+
+    fun setSelectedCategory(category: String) {
+        _uiState.update { it.copy(selectedCategory = category) }
+        viewModelScope.launch {
+            preferenceManager.setSelectedTaskCategory(category)
         }
     }
 
@@ -109,8 +115,19 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val tasks = repository.getTodos()
                 _uiState.update { it.copy(tasks = tasks, isLoading = false) }
+                syncNotifications(tasks)
             } catch (e: Exception) {
                 _uiState.update { it.copy(error = e.message, isLoading = false) }
+            }
+        }
+    }
+
+    private fun syncNotifications(tasks: List<Task>) {
+        tasks.forEach { task ->
+            if (!task.done && task.reminder != null && task.reminder > System.currentTimeMillis()) {
+                reminderManager.scheduleReminder(task.reminder, task.title, task.description, task.id)
+            } else {
+                reminderManager.cancelReminder(task.id)
             }
         }
     }
@@ -119,15 +136,16 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentTasks = _uiState.value.tasks
             val newId = (currentTasks.maxOfOrNull { it.id } ?: 0) + 1
-            val currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale("pt", "BR"))).replaceFirstChar { it.uppercase() }
+            val currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale.forLanguageTag("pt-BR"))).replaceFirstChar { it.uppercase() }
             
             val newTask = Task(id = newId, title = title, description = description, category = category, color = color, done = false, status = TaskStatus.PENDING, created = currentTime, reminder = reminder)
-            _uiState.update { it.copy(tasks = currentTasks + newTask) }
+            val updatedTasks = currentTasks + newTask
+            _uiState.update { it.copy(tasks = updatedTasks) }
 
-            reminder?.let { if (it > System.currentTimeMillis()) reminderManager.scheduleReminder(it, title, description, newId) }
+            reminder?.let { reminderManager.scheduleReminder(it, title, description, newId) }
 
             try {
-                repository.updateTodos(_uiState.value.tasks)
+                repository.updateTodos(updatedTasks)
             } catch (e: Exception) {
                 _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
             }
@@ -143,7 +161,7 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update { it.copy(tasks = updatedTasks) }
 
             reminderManager.cancelReminder(taskId)
-            reminder?.let { if (it > System.currentTimeMillis()) reminderManager.scheduleReminder(it, title, description, taskId) }
+            reminder?.let { reminderManager.scheduleReminder(it, title, description, taskId) }
 
             try {
                 repository.updateTodos(updatedTasks)
@@ -161,7 +179,12 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             }
             _uiState.update { it.copy(tasks = updatedTasks) }
 
-            if (newStatus == TaskStatus.DONE) reminderManager.cancelReminder(taskId)
+            if (newStatus == TaskStatus.DONE) {
+                reminderManager.cancelReminder(taskId)
+            } else {
+                val task = updatedTasks.find { it.id == taskId }
+                task?.reminder?.let { reminderManager.scheduleReminder(it, task.title, task.description, taskId) }
+            }
 
             try {
                 repository.updateTodos(updatedTasks)
@@ -183,9 +206,11 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             }
             _uiState.update { it.copy(tasks = updatedTasks) }
 
-            if (isNowDone) reminderManager.cancelReminder(taskId) else {
+            if (isNowDone) {
+                reminderManager.cancelReminder(taskId)
+            } else {
                 val task = updatedTasks.find { it.id == taskId }
-                task?.reminder?.let { if (it > System.currentTimeMillis()) reminderManager.scheduleReminder(it, task.title, task.description, taskId) }
+                task?.reminder?.let { reminderManager.scheduleReminder(it, task.title, task.description, taskId) }
             }
 
             try {
@@ -196,17 +221,26 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun handleNotificationNavigation(taskId: Int) {
+        viewModelScope.launch {
+            _eventChannel.send(UiEvent.NavigateToTask(taskId))
+        }
+    }
+
     fun deleteTodo(taskId: Int) {
         viewModelScope.launch {
             val taskToDelete = _uiState.value.tasks.find { it.id == taskId } ?: return@launch
             lastDeletedTask = taskToDelete
             _uiState.update { it.copy(tasks = it.tasks.filterNot { t -> t.id == taskId }) }
+            reminderManager.cancelReminder(taskId)
             _eventChannel.send(UiEvent.ShowUndoSnackbar(taskToDelete))
         }
     }
 
     fun undoDelete(task: Task) {
-        _uiState.update { it.copy(tasks = (_uiState.value.tasks + task).sortedBy { it.id }) }
+        val updatedTasks = (_uiState.value.tasks + task).sortedBy { it.id }
+        _uiState.update { it.copy(tasks = updatedTasks) }
+        task.reminder?.let { reminderManager.scheduleReminder(it, task.title, task.description, task.id) }
         lastDeletedTask = null
     }
 

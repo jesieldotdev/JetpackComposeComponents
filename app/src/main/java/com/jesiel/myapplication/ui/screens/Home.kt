@@ -52,18 +52,23 @@ fun HomeScreen(
 
     LaunchedEffect(Unit) {
         todoViewModel.eventFlow.collect { event ->
-            if (event is UiEvent.ShowUndoSnackbar) {
-                scope.launch {
-                    val result = snackbarHostState.showSnackbar(
-                        message = "Tarefa removida",
-                        actionLabel = "Desfazer",
-                        duration = SnackbarDuration.Short
-                    )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        todoViewModel.undoDelete(event.task)
-                    } else {
-                        todoViewModel.confirmDeletion()
+            when (event) {
+                is UiEvent.ShowUndoSnackbar -> {
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = "Tarefa removida",
+                            actionLabel = "Desfazer",
+                            duration = SnackbarDuration.Short
+                        )
+                        if (result == SnackbarResult.ActionPerformed) {
+                            todoViewModel.undoDelete(event.task)
+                        } else {
+                            todoViewModel.confirmDeletion()
+                        }
                     }
+                }
+                is UiEvent.NavigateToTask -> {
+                    onNavigateToDetail(event.taskId)
                 }
             }
         }
@@ -82,7 +87,7 @@ fun HomeScreen(
                                 themeViewModel.setKanbanMode(!themeState.isKanbanMode)
                             }
                         },
-                        onNavigateToHome = { scope.launch { drawerState.close() } }, // Already at home
+                        onNavigateToHome = { scope.launch { drawerState.close() } },
                         onNavigateToHabits = onNavigateToHabits,
                         onNavigateToSettings = onNavigateToSettings,
                         onNavigateToAbout = onNavigateToAbout
@@ -128,6 +133,7 @@ fun HomeScreen(
                         onDeleteTask = { id -> todoViewModel.deleteTodo(id) },
                         onTaskClick = onNavigateToDetail,
                         onMenuClick = { scope.launch { drawerState.open() } },
+                        onCategorySelect = { todoViewModel.setSelectedCategory(it) },
                         contentPadding = innerPadding
                     )
                 }
@@ -150,18 +156,17 @@ fun HomeContent(
     onDeleteTask: (Int) -> Unit,
     onTaskClick: (Int) -> Unit,
     onMenuClick: () -> Unit,
+    onCategorySelect: (String) -> Unit,
     contentPadding: PaddingValues
 ) {
     val pullRefreshState = rememberPullRefreshState(uiState.isLoading, onRefresh)
-    val context = LocalContext.current
     
-    var selectedCategory by remember { mutableStateOf("Tudo") }
     val categories = remember(uiState.tasks) {
-        listOf("Tudo") + uiState.tasks.mapNotNull { it.category }.distinct()
+        listOf("Tudo") + uiState.tasks.mapNotNull { it.category }.filter { it.isNotBlank() }.distinct()
     }
 
-    val (pendingTasks, doneTasks) = remember(uiState.tasks, selectedCategory) {
-        val filtered = if (selectedCategory == "Tudo") uiState.tasks else uiState.tasks.filter { it.category == selectedCategory }
+    val (pendingTasks, doneTasks) = remember(uiState.tasks, uiState.selectedCategory) {
+        val filtered = if (uiState.selectedCategory == "Tudo") uiState.tasks else uiState.tasks.filter { it.category == uiState.selectedCategory }
         val sorted = filtered.sortedByDescending { it.id }
         sorted.partition { it.status != TaskStatus.DONE }
     }
@@ -178,13 +183,13 @@ fun HomeContent(
         } else {
             Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
                 HomeTopBar(onMenuClick = onMenuClick)
-                CategoryFilterBar(categories, selectedCategory) { selectedCategory = it }
+                CategoryFilterBar(categories, uiState.selectedCategory) { onCategorySelect(it) }
                 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (isKanbanMode) {
                     KanbanScreen(
-                        uiState = uiState.copy(tasks = if (selectedCategory == "Tudo") uiState.tasks else uiState.tasks.filter { it.category == selectedCategory }),
+                        uiState = uiState.copy(tasks = if (uiState.selectedCategory == "Tudo") uiState.tasks else uiState.tasks.filter { it.category == uiState.selectedCategory }),
                         onUpdateStatus = onUpdateTaskStatus,
                         onDeleteTask = onDeleteTask,
                         onTaskClick = onTaskClick

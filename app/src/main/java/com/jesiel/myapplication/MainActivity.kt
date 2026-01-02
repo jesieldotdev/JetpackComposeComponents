@@ -1,6 +1,7 @@
 package com.jesiel.myapplication
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -9,9 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -25,6 +24,8 @@ import com.jesiel.myapplication.viewmodel.*
 
 class MainActivity : ComponentActivity() {
 
+    private var currentIntent by mutableStateOf<Intent?>(null)
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         checkNotificationPermission()
+        currentIntent = intent
 
         setContent {
             val themeViewModel: ThemeViewModel = viewModel()
@@ -52,9 +54,15 @@ class MainActivity : ComponentActivity() {
                 darkTheme = useDarkTheme,
                 dynamicColor = themeState.useDynamicColors
             ) {
-                AppNavigation(themeViewModel = themeViewModel)
+                AppNavigation(themeViewModel = themeViewModel, intent = currentIntent)
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        currentIntent = intent
     }
 
     private fun checkNotificationPermission() {
@@ -67,11 +75,26 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(themeViewModel: ThemeViewModel) {
+fun AppNavigation(themeViewModel: ThemeViewModel, intent: Intent?) {
     val navController = rememberNavController()
     val todoViewModel: TodoViewModel = viewModel()
     val habitViewModel: HabitViewModel = viewModel()
     val uiState by todoViewModel.uiState.collectAsState()
+
+    // Handle deep link navigation from notifications
+    LaunchedEffect(intent) {
+        intent?.let {
+            val taskId = it.getIntExtra("navigate_to_task_id", -1)
+            if (taskId != -1) {
+                // Clear the extra to avoid navigating again on recomposition if intent stays
+                it.removeExtra("navigate_to_task_id")
+                navController.navigate("detail/$taskId") {
+                    popUpTo("home")
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
 
     NavHost(
         navController = navController,

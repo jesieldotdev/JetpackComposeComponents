@@ -6,12 +6,14 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.jesiel.myapplication.MainActivity
 
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        val taskId = intent.getIntExtra("task_id", -1)
         val title = intent.getStringExtra("task_title") ?: "Lembrete de Tarefa"
         val description = intent.getStringExtra("task_description")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -30,12 +32,20 @@ class ReminderReceiver : BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Intent to open the app when clicking the notification
+        // Intent with DeepLink or Extras to open the specific task
         val mainIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            if (taskId != -1) {
+                // We use a custom action or data to help the UI identify the navigation target
+                data = Uri.parse("mytodos://task/$taskId")
+                putExtra("navigate_to_task_id", taskId)
+            }
         }
+        
         val pendingIntent = PendingIntent.getActivity(
-            context, 0, mainIntent,
+            context, 
+            if (taskId != -1) taskId else 0, 
+            mainIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -51,6 +61,6 @@ class ReminderReceiver : BroadcastReceiver() {
             .setStyle(if (description != null) NotificationCompat.BigTextStyle().bigText(description) else null)
             .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        notificationManager.notify(if (taskId != -1) taskId else System.currentTimeMillis().toInt(), notification)
     }
 }
