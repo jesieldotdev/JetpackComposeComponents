@@ -50,5 +50,8 @@ data class Habit(
     val lastUpdatedDay: Long? = null,
     val streak: Int = 0,
     val streakGoal: Int = 0,
-    val lastCompletedDay: Long? = null
+    val lastCompletedDay: Long? = null,
+    val completedOffensives: Int = 0,
+    val completedDays: List<Long> = emptyList(),
+    val pastOffensives: List<Int> = emptyList()
 )

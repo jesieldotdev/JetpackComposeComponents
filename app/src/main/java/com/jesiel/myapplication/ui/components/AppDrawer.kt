@@ -3,6 +3,8 @@ package com.jesiel.myapplication.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -38,13 +40,13 @@ fun AppDrawer(
         // Navigation Options
         DrawerItem(
             label = "Tarefas",
-            icon = Icons.Default.Home,
+            icon = Icons.Default.Done,
             onClick = onNavigateToHome
         )
 
         DrawerItem(
             label = "Hábitos",
-            icon = Icons.Default.DateRange,
+            icon = Icons.Default.Refresh,
             onClick = onNavigateToHabits
         )
 
@@ -55,7 +57,7 @@ fun AppDrawer(
 
         DrawerItem(
             label = if (isKanbanMode) "Ver em Lista" else "Modo Kanban (Pro)",
-            icon = if (isKanbanMode) Icons.Default.List else Icons.Default.Refresh,
+            icon = if (isKanbanMode) Icons.AutoMirrored.Filled.List else Icons.AutoMirrored.Filled.ArrowForward,
             onClick = onToggleKanban
         )
 

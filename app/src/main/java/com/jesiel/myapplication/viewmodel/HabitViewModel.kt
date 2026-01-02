@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.Calendar
 
 data class HabitUiState(
     val habits: List<Habit> = emptyList(),
@@ -76,13 +75,43 @@ class HabitViewModel : ViewModel() {
                     val nextProgress = habit.currentProgress + 1
                     if (nextProgress <= habit.goal) {
                         val isNowCompleted = nextProgress == habit.goal
+                        val newCompletedDays = if (isNowCompleted && !habit.completedDays.contains(todayEpoch)) {
+                            habit.completedDays + todayEpoch
+                        } else habit.completedDays
+                        
                         habit.copy(
                             currentProgress = nextProgress,
                             lastUpdatedDay = todayEpoch,
                             streak = if (isNowCompleted) habit.streak + 1 else habit.streak,
-                            lastCompletedDay = if (isNowCompleted) todayEpoch else habit.lastCompletedDay
+                            lastCompletedDay = if (isNowCompleted) todayEpoch else habit.lastCompletedDay,
+                            completedDays = newCompletedDays
                         )
                     } else habit
+                } else habit
+            }
+
+            _uiState.update { it.copy(habits = updatedHabits) }
+
+            try {
+                val currentRecord = repository.getFullRecord()
+                repository.updateFullRecord(currentRecord.copy(habits = updatedHabits))
+            } catch (e: Exception) {
+                _uiState.update { it.copy(habits = currentHabits, error = e.message) }
+            }
+        }
+    }
+
+    fun startNewOffensive(habitId: Int) {
+        viewModelScope.launch {
+            val currentHabits = _uiState.value.habits
+            val updatedHabits = currentHabits.map { habit ->
+                if (habit.id == habitId) {
+                    habit.copy(
+                        streak = 0,
+                        completedOffensives = habit.completedOffensives + 1,
+                        pastOffensives = habit.pastOffensives + habit.streak,
+                        lastCompletedDay = null
+                    )
                 } else habit
             }
 
