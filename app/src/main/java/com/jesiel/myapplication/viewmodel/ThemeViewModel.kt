@@ -13,7 +13,8 @@ enum class AppTheme {
 
 data class ThemeState(
     val theme: AppTheme = AppTheme.SYSTEM,
-    val useDynamicColors: Boolean = true
+    val useDynamicColors: Boolean = true,
+    val isKanbanMode: Boolean = false
 )
 
 class ThemeViewModel(application: Application) : AndroidViewModel(application) {
@@ -25,8 +26,12 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
     init {
         // Load saved preferences
         viewModelScope.launch {
-            combine(preferenceManager.theme, preferenceManager.useDynamicColors) { theme, dynamic ->
-                ThemeState(theme, dynamic)
+            combine(
+                preferenceManager.theme, 
+                preferenceManager.useDynamicColors,
+                preferenceManager.isKanbanMode
+            ) { theme, dynamic, kanban ->
+                ThemeState(theme, dynamic, kanban)
             }.collect { newState ->
                 _themeState.value = newState
             }
@@ -42,6 +47,12 @@ class ThemeViewModel(application: Application) : AndroidViewModel(application) {
     fun setDynamicColors(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.setDynamicColors(enabled)
+        }
+    }
+
+    fun setKanbanMode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.setKanbanMode(enabled)
         }
     }
 }

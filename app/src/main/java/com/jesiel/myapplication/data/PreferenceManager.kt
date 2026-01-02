@@ -18,6 +18,7 @@ class PreferenceManager(private val context: Context) {
         val BLUR_INTENSITY = floatPreferencesKey("blur_intensity")
         val BACKGROUND_IMAGE = stringPreferencesKey("background_image")
         val LAST_IMAGE_UPDATE_DAY = longPreferencesKey("last_image_update_day")
+        val KANBAN_MODE = booleanPreferencesKey("kanban_mode")
     }
 
     val theme: Flow<AppTheme> = context.dataStore.data.map { preferences ->
@@ -39,6 +40,10 @@ class PreferenceManager(private val context: Context) {
 
     val lastImageUpdateDay: Flow<Long> = context.dataStore.data.map { preferences ->
         preferences[Keys.LAST_IMAGE_UPDATE_DAY] ?: 0L
+    }
+
+    val isKanbanMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[Keys.KANBAN_MODE] ?: false
     }
 
     suspend fun setTheme(theme: AppTheme) {
@@ -63,6 +68,12 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[Keys.BACKGROUND_IMAGE] = url
             preferences[Keys.LAST_IMAGE_UPDATE_DAY] = dayEpoch
+        }
+    }
+
+    suspend fun setKanbanMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[Keys.KANBAN_MODE] = enabled
         }
     }
 }

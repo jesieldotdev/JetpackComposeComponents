@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesiel.myapplication.data.PreferenceManager
 import com.jesiel.myapplication.data.Task
+import com.jesiel.myapplication.data.TaskStatus
 import com.jesiel.myapplication.data.TodoRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,10 +68,8 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update { it.copy(blurIntensity = savedBlur) }
 
             if (savedUrl.isEmpty() || lastUpdateDay != today) {
-                // New day or first time: get new image
                 refreshBackgroundImage()
             } else {
-                // Same day: use saved image
                 _uiState.update { it.copy(backgroundImageUrl = savedUrl) }
             }
         }
@@ -123,7 +122,8 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
                 description = description,
                 category = category,
                 color = color,
-                done = false, 
+                done = false,
+                status = TaskStatus.PENDING,
                 created = currentTime,
                 reminder = reminder
             )
@@ -167,6 +167,33 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
                 if (time > System.currentTimeMillis()) {
                     scheduleNotification(context, time, title, description, taskId)
                 }
+            }
+
+            try {
+                repository.updateTodos(updatedTasks)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(tasks = currentTasks, error = e.message) }
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateTaskStatus(context: Context, taskId: Int, newStatus: TaskStatus) {
+        viewModelScope.launch {
+            val currentTasks = _uiState.value.tasks
+            val updatedTasks = currentTasks.map {
+                if (it.id == taskId) {
+                    it.copy(
+                        status = newStatus,
+                        done = newStatus == TaskStatus.DONE
+                    )
+                } else it
+            }
+
+            _uiState.update { it.copy(tasks = updatedTasks) }
+
+            if (newStatus == TaskStatus.DONE) {
+                cancelNotification(context, taskId)
             }
 
             try {
@@ -227,7 +254,10 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             val updatedTasks = currentTasks.map {
                 if (it.id == taskId) {
                     isNowDone = !it.done
-                    it.copy(done = isNowDone)
+                    it.copy(
+                        done = isNowDone,
+                        status = if (isNowDone) TaskStatus.DONE else TaskStatus.PENDING
+                    )
                 } else it
             }
 

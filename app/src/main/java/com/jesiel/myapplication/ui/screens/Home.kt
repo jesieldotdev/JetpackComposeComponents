@@ -12,7 +12,9 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -37,10 +39,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.jesiel.myapplication.data.Task
+import com.jesiel.myapplication.data.TaskStatus
 import com.jesiel.myapplication.ui.components.Card
 import com.jesiel.myapplication.ui.components.ExampleBottomSheet
 import com.jesiel.myapplication.ui.components.Header
 import com.jesiel.myapplication.ui.theme.myTodosTheme
+import com.jesiel.myapplication.viewmodel.ThemeViewModel
 import com.jesiel.myapplication.viewmodel.TodoUiState
 import com.jesiel.myapplication.viewmodel.TodoViewModel
 import com.jesiel.myapplication.viewmodel.UiEvent
@@ -50,11 +54,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     todoViewModel: TodoViewModel = viewModel(),
+    themeViewModel: ThemeViewModel = viewModel(),
     onNavigateToDetail: (Int) -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {}
 ) {
     val uiState by todoViewModel.uiState.collectAsState()
+    val themeState by themeViewModel.themeState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var showSheet by remember { mutableStateOf(false) }
@@ -118,6 +124,17 @@ fun HomeScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         DrawerItem(
+                            label = if (themeState.isKanbanMode) "Ver em Lista" else "Modo Kanban (Pro)",
+                            icon = if (themeState.isKanbanMode) Icons.Default.List else Icons.Default.Refresh,
+                            onClick = {
+                                scope.launch { 
+                                    drawerState.close()
+                                    themeViewModel.setKanbanMode(!themeState.isKanbanMode)
+                                }
+                            }
+                        )
+
+                        DrawerItem(
                             label = "Configurações",
                             icon = Icons.Default.Settings,
                             onClick = {
@@ -153,6 +170,7 @@ fun HomeScreen(
                             )
                         }
                     },
+                    // Removed topBar to avoid duplication of Menu Icon
                     floatingActionButton = {
                         FloatingActionButton(
                             onClick = { showSheet = true },
@@ -166,6 +184,7 @@ fun HomeScreen(
                 ) { innerPadding ->
                     HomeContent(
                         uiState = uiState,
+                        isKanbanMode = themeState.isKanbanMode,
                         showSheet = showSheet,
                         onDismissSheet = { showSheet = false },
                         onSaveTodo = { title, desc, cat, color, reminder ->
@@ -173,6 +192,7 @@ fun HomeScreen(
                         },
                         onRefresh = { todoViewModel.refresh() },
                         onToggleTaskStatus = { taskId -> todoViewModel.toggleTaskStatus(context, taskId) },
+                        onUpdateTaskStatus = { taskId, status -> todoViewModel.updateTaskStatus(context, taskId, status) },
                         onDeleteTask = { taskId -> todoViewModel.deleteTodo(taskId) },
                         onTaskClick = onNavigateToDetail,
                         onMenuClick = { scope.launch { drawerState.open() } },
@@ -208,11 +228,13 @@ private fun DrawerItem(
 @Composable
 fun HomeContent(
     uiState: TodoUiState,
+    isKanbanMode: Boolean,
     showSheet: Boolean,
     onDismissSheet: () -> Unit,
     onSaveTodo: (String, String?, String?, String?, Long?) -> Unit,
     onRefresh: () -> Unit,
     onToggleTaskStatus: (Int) -> Unit,
+    onUpdateTaskStatus: (Int, TaskStatus) -> Unit,
     onDeleteTask: (Int) -> Unit,
     onTaskClick: (Int) -> Unit,
     onMenuClick: () -> Unit,
@@ -226,12 +248,14 @@ fun HomeContent(
     }
     var selectedCategory by remember { mutableStateOf("Tudo") }
 
-    val filteredTasks = remember(uiState.tasks, selectedCategory) {
-        if (selectedCategory == "Tudo") {
+    val (pendingTasks, doneTasks) = remember(uiState.tasks, selectedCategory) {
+        val filtered = if (selectedCategory == "Tudo") {
             uiState.tasks
         } else {
             uiState.tasks.filter { it.category == selectedCategory }
         }
+        val sorted = filtered.sortedByDescending { it.id }
+        sorted.partition { it.status != TaskStatus.DONE }
     }
 
     Box(
@@ -267,6 +291,7 @@ fun HomeContent(
                     .fillMaxSize()
                     .padding(contentPadding)
             ) {
+                // Header section with Menu Button integrated
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -320,18 +345,49 @@ fun HomeContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                LazyColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    items(filteredTasks, key = { it.id }) { task ->
-                        Card(
-                            task = task,
-                            onToggleStatus = { taskId -> onToggleTaskStatus(taskId) },
-                            onDelete = onDeleteTask,
-                            onClick = { onTaskClick(task.id) }
-                        )
+                if (isKanbanMode) {
+                    KanbanScreen(
+                        uiState = uiState.copy(tasks = if (selectedCategory == "Tudo") uiState.tasks else uiState.tasks.filter { it.category == selectedCategory }),
+                        onUpdateStatus = onUpdateTaskStatus,
+                        onDeleteTask = onDeleteTask,
+                        onTaskClick = onTaskClick
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 80.dp)
+                    ) {
+                        items(pendingTasks, key = { it.id }) { task ->
+                            Card(
+                                task = task,
+                                onToggleStatus = { taskId -> onToggleTaskStatus(taskId) },
+                                onDelete = onDeleteTask,
+                                onClick = { onTaskClick(task.id) }
+                            )
+                        }
+
+                        if (doneTasks.isNotEmpty()) {
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Concluídas",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+                                )
+                            }
+                            
+                            items(doneTasks, key = { it.id }) { task ->
+                                Card(
+                                    task = task,
+                                    onToggleStatus = { taskId -> onToggleTaskStatus(taskId) },
+                                    onDelete = onDeleteTask,
+                                    onClick = { onTaskClick(task.id) }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -361,11 +417,13 @@ fun HomeContentPreview() {
         )
         HomeContent(
             uiState = TodoUiState(tasks = sampleTasks),
+            isKanbanMode = false,
             showSheet = false,
             onDismissSheet = {},
             onSaveTodo = { _, _, _, _, _ -> },
             onRefresh = {},
             onToggleTaskStatus = {},
+            onUpdateTaskStatus = { _, _ -> },
             onDeleteTask = {},
             onTaskClick = {},
             onMenuClick = {}
