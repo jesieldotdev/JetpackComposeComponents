@@ -101,9 +101,9 @@ fun Header(
     LaunchedEffect(messages) {
         while (true) {
             showDay = true
-            delay(4000)
+            delay(6000)
             showDay = false
-            delay(7000)
+            delay(12000)
             currentMessageIndex = (currentMessageIndex + 1) % messages.size
         }
     }
@@ -139,8 +139,8 @@ fun Header(
                     val currentText = messages.getOrNull(currentMessageIndex) ?: ""
                     Text(
                         text = "• $currentText",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 24.sp,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         modifier = Modifier
