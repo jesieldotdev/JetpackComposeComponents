@@ -48,13 +48,12 @@ fun Header(
     val todoState by todoViewModel.uiState.collectAsState()
     val habitState by habitViewModel.uiState.collectAsState()
 
-    // Estado para manter o horário e data atualizados
     var currentDateTime by remember { mutableStateOf(LocalDateTime.now()) }
     
     LaunchedEffect(Unit) {
         while (true) {
             currentDateTime = LocalDateTime.now()
-            delay(1000 * 60) // Atualiza a cada minuto
+            delay(1000 * 60)
         }
     }
 
@@ -65,8 +64,9 @@ fun Header(
         "${getGreetingText()} • ${datePart.replaceFirstChar { it.uppercase() }} • $timePart"
     }
 
-    val marqueeText = remember(todoState.tasks, habitState.habits) {
-        val infos = mutableListOf<String>()
+    // Lista de mensagens individuais
+    val messages = remember(todoState.tasks, habitState.habits) {
+        val list = mutableListOf<String>()
         
         val now = System.currentTimeMillis()
         val nextReminder = todoState.tasks
@@ -81,28 +81,30 @@ fun Header(
             val dayName = reminderDT.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
             val timeStr = reminderDT.format(DateTimeFormatter.ofPattern("HH:mm"))
             val dateStr = reminderDT.format(DateTimeFormatter.ofPattern("dd/MM"))
-            
-            infos.add("você tem um lembrete para: ${nextReminder.title} ($dayName, $dateStr às $timeStr)")
+            list.add("Você tem um lembrete para: ${nextReminder.title} ($dayName, $dateStr às $timeStr)")
         }
 
         val pendingCount = todoState.tasks.count { !it.done }
-        if (pendingCount > 0) infos.add("você tem $pendingCount tarefas pendentes")
+        if (pendingCount > 0) list.add("Você tem $pendingCount tarefas pendentes")
         
         val habitsRemaining = habitState.habits.count { it.currentProgress < it.goal }
-        if (habitsRemaining > 0) infos.add("faltam $habitsRemaining hábitos para hoje")
-        else if (habitState.habits.isNotEmpty()) infos.add("todos os hábitos concluídos! 🔥")
+        if (habitsRemaining > 0) list.add("Faltam $habitsRemaining hábitos para hoje")
+        else if (habitState.habits.isNotEmpty()) list.add("Todos os hábitos concluídos! 🔥")
 
-        if (infos.isEmpty()) "tudo em dia por aqui!" else infos.joinToString("   •   ")
+        if (list.isEmpty()) listOf("Tudo em dia por aqui!") else list
     }
 
     var showDay by remember { mutableStateOf(true) }
+    var currentMessageIndex by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(marqueeText) {
+    // Ciclo: Dia (4s) -> Mensagem[i] (7s) -> Dia (4s) -> Mensagem[i+1]...
+    LaunchedEffect(messages) {
         while (true) {
             showDay = true
             delay(4000)
             showDay = false
-            delay(14000)
+            delay(7000)
+            currentMessageIndex = (currentMessageIndex + 1) % messages.size
         }
     }
 
@@ -119,13 +121,14 @@ fun Header(
             contentAlignment = Alignment.CenterStart
         ) {
             AnimatedContent(
-                targetState = showDay,
+                // O targetState agora identifica unicamente se é Dia ou qual Mensagem específica
+                targetState = if (showDay) "day" else "msg_$currentMessageIndex",
                 transitionSpec = {
                     (fadeIn() + slideInVertically { it }).togetherWith(fadeOut() + slideOutVertically { -it })
                 },
                 label = "HeaderTransition"
-            ) { isShowingDay ->
-                if (isShowingDay) {
+            ) { state ->
+                if (state == "day") {
                     Text(
                         text = getDayOfWeekText(),
                         fontWeight = FontWeight.ExtraBold,
@@ -133,10 +136,11 @@ fun Header(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 } else {
+                    val currentText = messages.getOrNull(currentMessageIndex) ?: ""
                     Text(
-                        text = "• $marqueeText • $marqueeText",
+                        text = "• $currentText",
                         fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         modifier = Modifier
