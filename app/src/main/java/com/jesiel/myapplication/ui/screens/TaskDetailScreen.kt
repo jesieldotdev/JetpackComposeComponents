@@ -1,5 +1,6 @@
 package com.jesiel.myapplication.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -32,15 +33,19 @@ fun TaskDetailScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        BlurredBackground(
-            imageUrl = uiState.backgroundImageUrl, 
-            blurIntensity = uiState.blurIntensity,
-            scrimAlpha = 0.6f
-        )
+        if (uiState.showBackgroundImage) {
+            BlurredBackground(
+                imageUrl = uiState.backgroundImageUrl, 
+                blurIntensity = uiState.blurIntensity,
+                scrimAlpha = 0.6f
+            )
+        } else {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+        }
 
         Scaffold(
             containerColor = Color.Transparent,
-            topBar = { DetailTopBar(onNavigateBack) },
+            topBar = { DetailTopBar(onNavigateBack = onNavigateBack) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { showEditSheet = true }) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar Tarefa")

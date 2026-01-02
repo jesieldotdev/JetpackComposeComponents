@@ -65,7 +65,12 @@ fun HabitDetailScreen(
 
         Scaffold(
             containerColor = Color.Transparent,
-            topBar = { DetailTopBar(onNavigateBack) },
+            topBar = { 
+                DetailTopBar(
+                    title = "Detalhes do Hábito",
+                    onNavigateBack = onNavigateBack
+                ) 
+            },
             floatingActionButton = {
                 FloatingActionButton(onClick = { showEditSheet = true }) {
                     Icon(Icons.Default.Edit, contentDescription = "Editar Hábito")
@@ -290,5 +295,3 @@ fun HabitDetailScreen(
         )
     }
 }
-
-

@@ -8,9 +8,12 @@ import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailTopBar(onNavigateBack: () -> Unit) {
+fun DetailTopBar(
+    title: String = "Detalhes da Tarefa",
+    onNavigateBack: () -> Unit
+) {
     TopAppBar(
-        title = { Text("Detalhes da Tarefa", color = MaterialTheme.colorScheme.onSurface) },
+        title = { Text(title, color = MaterialTheme.colorScheme.onSurface) },
         navigationIcon = {
             IconButton(onClick = onNavigateBack) {
                 Icon(

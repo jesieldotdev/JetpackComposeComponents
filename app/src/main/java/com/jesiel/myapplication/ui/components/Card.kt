@@ -137,8 +137,8 @@ private fun TaskContent(
 
             Column (
                 modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-                    .weight(1f),
+                    .fillMaxWidth() // Usa fillMaxWidth em vez de weight para evitar conflito com IntrinsicSize
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start
             ){
