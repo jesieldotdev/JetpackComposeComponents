@@ -19,7 +19,11 @@ sealed class Screen {
 }
 
 @Composable
-fun TaskaApp() {
+fun TaskaApp(
+    onExit: () -> Unit
+) {
+    val windowState = rememberWindowState()
+
     val preferenceManager = remember { DesktopPreferenceManager() }
     val reminderManager = remember { DesktopReminderManager() }
     
@@ -48,7 +52,8 @@ fun TaskaApp() {
                 isKanbanMode = themeState.isKanbanMode,
                 onNavigateToSettings = { currentScreen = Screen.Settings },
                 onNavigateToHabits = { currentScreen = Screen.Habits },
-                onNavigateToDetail = { taskId -> currentScreen = Screen.Detail(taskId) }
+                onExit
+//                onNavigateToDetail = { taskId -> currentScreen = Screen.Detail(taskId) }
             )
             is Screen.Settings -> SettingsScreen(
                 todoViewModel = todoViewModel,
@@ -76,6 +81,6 @@ fun main() = application {
         title = "Taska App - Desktop",
         state = rememberWindowState(width = 1280.dp, height = 720.dp)
     ) {
-        TaskaApp()
+        TaskaApp({exitApplication()})
     }
 }

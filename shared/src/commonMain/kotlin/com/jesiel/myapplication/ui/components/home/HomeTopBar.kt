@@ -28,11 +28,15 @@ fun HomeTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+
         Header(
             modifier = Modifier.weight(1f),
             todoViewModel = todoViewModel,
             habitViewModel = habitViewModel
         )
+
+
+
         
         Surface(
             modifier = Modifier

@@ -1,6 +1,0 @@
-[
-    {
-        "merged": "com.jesiel.myapplication.shared-release-44:/drawable-v21/notification_action_background.xml",
-        "source": "com.jesiel.myapplication.shared-core-1.16.0-0:/drawable-v21/notification_action_background.xml"
-    }
-]

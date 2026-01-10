@@ -1,1 +1,0 @@
-com.jesiel.myapplication.shared

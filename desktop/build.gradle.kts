@@ -35,7 +35,7 @@ compose.desktop {
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb
             )
             packageName = "Taska App"
-            packageVersion = "1.0.2"
+            packageVersion = "1.0.3"
             
             linux {
                 shortcut = true

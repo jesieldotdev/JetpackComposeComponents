@@ -3,18 +3,15 @@ package com.jesiel.myapplication.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,8 +24,8 @@ import com.jesiel.myapplication.ui.components.form.ColorPicker
 import com.jesiel.myapplication.ui.components.Header
 import com.jesiel.myapplication.viewmodel.TodoViewModel
 import com.jesiel.myapplication.viewmodel.HabitViewModel
-import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.data.TaskStatus
+import com.jesiel.myapplication.ui.components.DesktopSidebar
 
 @Composable
 fun HomeScreen(
@@ -37,7 +34,8 @@ fun HomeScreen(
     isKanbanMode: Boolean = false,
     onNavigateToSettings: () -> Unit = {},
     onNavigateToHabits: () -> Unit = {},
-    onNavigateToDetail: (Int) -> Unit = {}
+    onExit: () -> Unit
+
 ) {
     val uiState by todoViewModel.uiState.collectAsState()
     
@@ -69,22 +67,11 @@ fun HomeScreen(
         Row(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             
             // 1. SIDEBAR
-            Column(
-                modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Brush.verticalGradient(listOf(primaryColor, MaterialTheme.colorScheme.secondary)))
-                    .padding(vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(32.dp)
-            ) {
-                IconButton(onClick = onNavigateToHabits) { Icon(Icons.Default.CheckCircle, "Habits", tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(28.dp)) }
-                Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(28.dp))
-                IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, null, tint = Color.White.copy(alpha = 0.7f)) }
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = Color.White)
-            }
+            DesktopSidebar(
+                onNavigateToHabits,
+                onNavigateToSettings,
+                onExit
+            )
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -99,7 +86,6 @@ fun HomeScreen(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Header(
-//                        modifier = Modifier.width(80.dp),
                         todoViewModel = todoViewModel,
                         habitViewModel = habitViewModel
                     )
@@ -164,7 +150,7 @@ fun HomeScreen(
                             CircularProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxSize(), color = primaryColor, strokeWidth = 12.dp)
                             Text("${(progress * 100).toInt()}%", fontWeight = FontWeight.Bold, fontSize = 32.sp, color = primaryColor)
                         }
-                        Text("Progresso Diário", fontWeight = FontWeight.Medium, color = Color.Gray)
+                        Text("Progresso", fontWeight = FontWeight.Medium, color = Color.Gray)
                     }
                 }
             }
@@ -234,3 +220,5 @@ fun HomeScreen(
         }
     }
 }
+
+
