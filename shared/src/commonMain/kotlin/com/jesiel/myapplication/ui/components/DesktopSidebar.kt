@@ -31,7 +31,8 @@ import androidx.compose.ui.unit.dp
 fun DesktopSidebar(
     onNavigateToHabits: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onExit: () -> Unit = {}
+    onExit: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {}
 //    onNavigateToDetail: (Int) -> Unit
 ) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -58,7 +59,7 @@ fun DesktopSidebar(
 
 
         Item(
-            onClick = onNavigateToHabits,
+            onClick = onNavigateToHome,
             icon = Icons.Default.CheckCircle,     // ✅ Agora usa =
             description = "Tarefas"                // ✅ Agora usa =
         )

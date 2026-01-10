@@ -52,19 +52,24 @@ fun TaskaApp(
                 isKanbanMode = themeState.isKanbanMode,
                 onNavigateToSettings = { currentScreen = Screen.Settings },
                 onNavigateToHabits = { currentScreen = Screen.Habits },
-                onExit
+                onExit,
+                onNavigateToHome = {currentScreen = Screen.Home}
 //                onNavigateToDetail = { taskId -> currentScreen = Screen.Detail(taskId) }
             )
             is Screen.Settings -> SettingsScreen(
                 todoViewModel = todoViewModel,
                 themeViewModel = themeViewModel,
-                onNavigateBack = { currentScreen = Screen.Home }
+                onNavigateBack = { currentScreen = Screen.Home },
+                onExit={onExit},
+                onNavigateToHome={currentScreen = Screen.Home},
+                onNavigateToHabits = {currentScreen = Screen.Habits}
             )
             is Screen.Habits -> HabitScreen(
                 habitViewModel = habitViewModel,
                 todoViewModel = todoViewModel,
                 onNavigateToHome = { currentScreen = Screen.Home },
-                onNavigateToSettings = { currentScreen = Screen.Settings }
+                onNavigateToSettings = { currentScreen = Screen.Settings },
+                onExit = onExit
             )
             is Screen.Detail -> TaskDetailScreen(
                 taskId = screen.taskId,

@@ -34,7 +34,8 @@ fun HomeScreen(
     isKanbanMode: Boolean = false,
     onNavigateToSettings: () -> Unit = {},
     onNavigateToHabits: () -> Unit = {},
-    onExit: () -> Unit
+    onExit: () -> Unit,
+    onNavigateToHome: () -> Unit = {},
 
 ) {
     val uiState by todoViewModel.uiState.collectAsState()
@@ -70,7 +71,8 @@ fun HomeScreen(
             DesktopSidebar(
                 onNavigateToHabits,
                 onNavigateToSettings,
-                onExit
+                onExit,
+                onNavigateToHome
             )
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -81,7 +83,7 @@ fun HomeScreen(
                     .weight(1f)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(32.dp))
-                    .background(surfaceColor.copy(alpha = 0.95f))
+//                    .background(surfaceColor.copy(alpha = 0.95f))
                     .padding(24.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -158,65 +160,72 @@ fun HomeScreen(
             Spacer(modifier = Modifier.width(16.dp))
 
             // 3. PAINEL DE ADIÇÃO / EDIÇÃO
-            Column(
+            Surface(
                 modifier = Modifier
-                    .width(320.dp)
+                    .width(420.dp)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(surfaceColor.copy(alpha = 0.95f))
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(rememberScrollState()),
+                shape = RoundedCornerShape(32.dp),
+                color = surfaceColor.copy(alpha = 0.3f), // Ajuste a transparência aqui (0.3f é bem transparente)
+                tonalElevation = 2.dp
             ) {
-                Text(
-                    text = if (editingTaskId == null) "Nova Tarefa" else "Editar Tarefa", 
-                    style = MaterialTheme.typography.headlineSmall, 
-                    fontWeight = FontWeight.ExtraBold, 
-                    color = primaryColor
-                )
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                TaskInputField(value = title, onValueChange = { title = it }, label = "O que fazer?", icon = Icons.Default.Create)
-                Spacer(modifier = Modifier.height(20.dp))
-                
-                TaskInputField(value = description, onValueChange = { description = it }, label = "Detalhes", icon = Icons.Default.Edit, isMultiline = true)
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                TaskInputField(value = category, onValueChange = { category = it }, label = "Categoria", icon = Icons.Default.List)
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                ColorPicker(colors = colors, selectedColor = selectedColor, onColorSelected = { selectedColor = it })
-                Spacer(modifier = Modifier.height(40.dp))
-                
-                Button(
-                    onClick = { 
-                        if (title.isNotBlank()) {
-                            if (editingTaskId == null) {
-                                todoViewModel.addTodo(title, description, category, selectedColor, null)
-                            } else {
-                                todoViewModel.updateTask(editingTaskId!!, title, description, category, selectedColor, null)
-                            }
-                            editingTaskId = null
-                            title = ""
-                            description = ""
-                            category = ""
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(58.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    enabled = title.isNotBlank()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp)
                 ) {
-                    Text(if (editingTaskId == null) "Criar Tarefa" else "Atualizar Tarefa", fontWeight = FontWeight.Bold)
-                }
-                
-                if (editingTaskId != null) {
-                    TextButton(
-                        onClick = { editingTaskId = null; title = ""; description = ""; category = "" },
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    Text(
+                        text = if (editingTaskId == null) "Nova Tarefa" else "Editar Tarefa",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = primaryColor
+                    )
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    TaskInputField(value = title, onValueChange = { title = it }, label = "O que fazer?", icon = Icons.Default.Create)
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    TaskInputField(value = description, onValueChange = { description = it }, label = "Detalhes", icon = Icons. Default.Edit, isMultiline = true)
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    TaskInputField(value = category, onValueChange = { category = it }, label = "Categoria", icon = Icons.Default.List)
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    ColorPicker(colors = colors, selectedColor = selectedColor, onColorSelected = { selectedColor = it })
+                    Spacer(modifier = Modifier.height(40.dp))
+
+                    Button(
+                        onClick = {
+                            if (title.isNotBlank()) {
+                                if (editingTaskId == null) {
+                                    todoViewModel. addTodo(title, description, category, selectedColor, null)
+                                } else {
+                                    todoViewModel.updateTask(editingTaskId!!, title, description, category, selectedColor, null)
+                                }
+                                editingTaskId = null
+                                title = ""
+                                description = ""
+                                category = ""
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(58.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        enabled = title.isNotBlank()
                     ) {
-                        Text("Cancelar Edição", color = Color.Gray)
+                        Text(if (editingTaskId == null) "Criar Tarefa" else "Atualizar Tarefa", fontWeight = FontWeight.Bold)
+                    }
+
+                    if (editingTaskId != null) {
+                        TextButton(
+                            onClick = { editingTaskId = null; title = ""; description = ""; category = "" },
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        ) {
+                            Text("Cancelar Edição", color = Color.Gray)
+                        }
                     }
                 }
             }
+
         }
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.data.Habit
 import com.jesiel.myapplication.data.HabitPeriod
+import com.jesiel.myapplication.ui.components.DesktopSidebar
 import com.jesiel.myapplication.ui.components.common.BlurredBackground
 import com.jesiel.myapplication.ui.components.home.CategoryFilterBar
 import com.jesiel.myapplication.viewmodel.HabitViewModel
@@ -39,7 +40,8 @@ fun HabitScreen(
     todoViewModel: TodoViewModel,
     onNavigateToHome: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToHabitDetail: (Int) -> Unit = {}
+    onNavigateToHabitDetail: (Int) -> Unit = {},
+    onExit: () -> Unit = {}
 ) {
     val habitState by habitViewModel.uiState.collectAsState()
     val todoState by todoViewModel.uiState.collectAsState()
@@ -57,24 +59,15 @@ fun HabitScreen(
         }
 
         Row(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            
-            // 1. SIDEBAR (Consistente com a Home)
-            Column(
-                modifier = Modifier
-                    .width(80.dp)
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Brush.verticalGradient(listOf(primaryColor, MaterialTheme.colorScheme.secondary)))
-                    .padding(vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(32.dp)
-            ) {
-                IconButton(onClick = onNavigateToHome) { Icon(Icons.Default.Check, null, tint = Color.White.copy(alpha = 0.7f)) }
-                Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(28.dp))
-                IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, null, tint = Color.White.copy(alpha = 0.7f)) }
-                Spacer(modifier = Modifier.weight(1f))
-                Icon(Icons.Default.ExitToApp, null, tint = Color.White)
-            }
+
+
+            DesktopSidebar(
+                onNavigateToHabits= {},
+                onNavigateToSettings,
+                onExit,
+                onNavigateToHome
+
+            )
 
             Spacer(modifier = Modifier.width(16.dp))
 
