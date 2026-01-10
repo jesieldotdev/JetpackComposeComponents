@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "com.jesiel.myapplication.shared-release-44:/layout/notification_template_part_chronometer.xml",
+        "source": "com.jesiel.myapplication.shared-core-1.16.0-0:/layout/notification_template_part_chronometer.xml"
+    },
+    {
+        "merged": "com.jesiel.myapplication.shared-release-44:/layout/custom_dialog.xml",
+        "source": "com.jesiel.myapplication.shared-core-1.16.0-0:/layout/custom_dialog.xml"
+    },
+    {
+        "merged": "com.jesiel.myapplication.shared-release-44:/layout/ime_secondary_split_test_activity.xml",
+        "source": "com.jesiel.myapplication.shared-core-1.16.0-0:/layout/ime_secondary_split_test_activity.xml"
+    },
+    {
+        "merged": "com.jesiel.myapplication.shared-release-44:/layout/notification_template_part_time.xml",
+        "source": "com.jesiel.myapplication.shared-core-1.16.0-0:/layout/notification_template_part_time.xml"
+    },
+    {
+        "merged": "com.jesiel.myapplication.shared-release-44:/layout/ime_base_split_test_activity.xml",
+        "source": "com.jesiel.myapplication.shared-core-1.16.0-0:/layout/ime_base_split_test_activity.xml"
+    }
+]

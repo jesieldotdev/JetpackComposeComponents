@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.jetbrains.kotlinx</groupId>
+  <artifactId>kotlinx-datetime</artifactId>
+  <versioning>
+    <latest>0.7.1-0.6.x-compat</latest>
+    <release>0.7.1-0.6.x-compat</release>
+    <versions>
+      <version>0.1.0</version>
+      <version>0.1.1</version>
+      <version>0.2.0</version>
+      <version>0.2.1</version>
+      <version>0.3.0</version>
+      <version>0.3.1</version>
+      <version>0.3.2</version>
+      <version>0.3.3</version>
+      <version>0.4.0</version>
+      <version>0.4.1</version>
+      <version>0.5.0</version>
+      <version>0.6.0-RC</version>
+      <version>0.6.0-RC.2</version>
+      <version>0.6.0</version>
+      <version>0.6.1</version>
+      <version>0.6.2</version>
+      <version>0.7.0</version>
+      <version>0.7.0-0.6.x-compat</version>
+      <version>0.7.1</version>
+      <version>0.7.1-0.6.x-compat</version>
+    </versions>
+    <lastUpdated>20250707174734</lastUpdated>
+  </versioning>
+</metadata>

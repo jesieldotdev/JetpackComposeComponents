@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="/home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared"
+    name=":shared"
+    type="LIBRARY"
+    maven="MyApplication:shared:unspecified"
+    agpVersion="8.13.2"
+    buildFolder="build"
+    bootClassPath="/home/zorin/Android/Sdk/platforms/android-36/android.jar:/home/zorin/Android/Sdk/build-tools/35.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="11"
+    compileTarget="android-36"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>
