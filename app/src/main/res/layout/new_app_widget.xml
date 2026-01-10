@@ -5,7 +5,6 @@
     android:theme="@style/Theme.myTodos.AppWidgetContainer">
 
     <TextView
-        android:id="@+id/appwidget_text"
         style="@style/Widget.myTodos.AppWidget.InnerView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

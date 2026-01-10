@@ -8,12 +8,12 @@ import android.os.Build
 import android.provider.Settings
 import com.jesiel.myapplication.viewmodel.ReminderReceiver
 
-class ReminderManager(private val context: Context) {
+class ReminderManager(private val context: Context) : IReminderManager {
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun scheduleReminder(time: Long, title: String, description: String?, id: Int) {
-        if (time <= System.currentTimeMillis()) return
+    override fun scheduleReminder(timeInMillis: Long, title: String, description: String?, id: Int) {
+        if (timeInMillis <= System.currentTimeMillis()) return
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
@@ -39,12 +39,12 @@ class ReminderManager(private val context: Context) {
         
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            time,
+            timeInMillis,
             pendingIntent
         )
     }
 
-    fun cancelReminder(id: Int) {
+    override fun cancelReminder(id: Int) {
         val intent = Intent(context, ReminderReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,

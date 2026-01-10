@@ -11,68 +11,115 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.jesiel.myapplication.viewmodel.HabitViewModel
+import com.jesiel.myapplication.viewmodel.TodoViewModel
 import kotlinx.coroutines.delay
-import java.time.Instant
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
+import kotlinx.datetime.*
 
-// Abstrações simplificadas enquanto não movemos os ViewModels reais
 @Composable
 fun Header(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    todoViewModel: TodoViewModel,
+    habitViewModel: HabitViewModel
 ) {
-    var currentDateTime by remember { mutableStateOf(LocalDateTime.now()) }
+    val todoState by todoViewModel.uiState.collectAsState()
+    val habitState by habitViewModel.uiState.collectAsState()
+
+    var currentTime by remember { mutableStateOf(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) }
     
     LaunchedEffect(Unit) {
         while (true) {
-            currentDateTime = LocalDateTime.now()
+            currentTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             delay(1000 * 60)
         }
     }
 
-    val formattedInfo = remember(currentDateTime) {
-        val locale = Locale("pt", "BR")
-        val datePart = currentDateTime.format(DateTimeFormatter.ofPattern("E, d 'de' MMM", locale))
-        val timePart = currentDateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+    val greeting = when (currentTime.hour) {
+        in 5..11 -> "Bom dia"
+        in 12..17 -> "Boa tarde"
+        else -> "Boa noite"
+    }
+
+    val dayOfWeekText = when (currentTime.dayOfWeek.name) {
+        "MONDAY" -> "Segunda-feira"
+        "TUESDAY" -> "Terça-feira"
+        "WEDNESDAY" -> "Quarta-feira"
+        "THURSDAY" -> "Quinta-feira"
+        "FRIDAY" -> "Sexta-feira"
+        "SATURDAY" -> "Sábado"
+        "SUNDAY" -> "Domingo"
+        else -> ""
+    }
+
+    val formattedInfo = "$greeting • ${currentTime.dayOfMonth}/${currentTime.monthNumber}"
+
+    val messages = remember(todoState.tasks, habitState.habits) {
+        val list = mutableListOf<String>()
+        val pendingCount = todoState.tasks.count { !it.done }
+        if (pendingCount > 0) list.add("Você tem $pendingCount tarefas pendentes")
         
-        val hour = currentDateTime.hour
-        val greeting = when (hour) {
-            in 5..11 -> "Bom dia"
-            in 12..17 -> "Boa tarde"
-            else -> "Boa noite"
+        val habitsRemaining = habitState.habits.count { it.currentProgress < it.goal }
+        if (habitsRemaining > 0) list.add("Faltam $habitsRemaining hábitos para hoje")
+        else if (habitState.habits.isNotEmpty()) list.add("Todos os hábitos concluídos! 🔥")
+
+        if (list.isEmpty()) listOf("Tudo em dia por aqui!") else list
+    }
+
+    var showDay by remember { mutableStateOf(true) }
+    var currentMessageIndex by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(messages) {
+        while (true) {
+            showDay = true
+            delay(6000)
+            showDay = false
+            delay(12000)
+            currentMessageIndex = (currentMessageIndex + 1) % messages.size
         }
-        
-        "$greeting • ${datePart.replaceFirstChar { it.uppercase() }} • $timePart"
     }
 
-    val dayOfWeek = remember(currentDateTime) {
-        val locale = Locale("pt", "BR")
-        currentDateTime.dayOfWeek.getDisplayName(TextStyle.FULL, locale).replaceFirstChar { it.uppercase() }
-    }
-
-    Column(modifier = modifier) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = formattedInfo,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            maxLines = 1
         )
         
         Box(
             modifier = Modifier.fillMaxWidth().height(40.dp),
             contentAlignment = Alignment.CenterStart
         ) {
-            Text(
-                text = dayOfWeek,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 28.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            AnimatedContent(
+                targetState = if (showDay) "day" else "msg_$currentMessageIndex",
+                transitionSpec = {
+                    (fadeIn() + slideInVertically { it }).togetherWith(fadeOut() + slideOutVertically { -it })
+                },
+                label = "HeaderTransition"
+            ) { state ->
+                if (state == "day") {
+                    Text(
+                        text = dayOfWeekText,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 28.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                } else {
+                    val currentText = messages.getOrNull(currentMessageIndex) ?: ""
+                    Text(
+                        text = "• $currentText",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .basicMarquee(iterations = Int.MAX_VALUE, velocity = 45.dp)
+                    )
+                }
+            }
         }
     }
 }

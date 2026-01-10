@@ -8,7 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.jesiel.myapplication.ui.components.ExampleBottomSheet
 import com.jesiel.myapplication.ui.components.common.BlurredBackground
@@ -25,7 +24,6 @@ fun TaskDetailScreen(
     val uiState by todoViewModel.uiState.collectAsState()
     val task = uiState.tasks.find { it.id == taskId }
     var showEditSheet by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     if (task == null) {
         LaunchedEffect(Unit) { onNavigateBack() }
@@ -67,7 +65,7 @@ fun TaskDetailScreen(
             onDismissSheet = { showEditSheet = false },
             initialTask = task,
             onSave = { title, desc, cat, color, reminder ->
-                todoViewModel.updateTask(context, task.id, title, desc, cat, color, reminder)
+                todoViewModel.updateTask(task.id, title, desc, cat, color, reminder)
                 showEditSheet = false
             }
         )

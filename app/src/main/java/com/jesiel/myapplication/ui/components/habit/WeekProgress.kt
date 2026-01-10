@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.data.Habit
-import com.jesiel.myapplication.ui.components.toColor
+import com.jesiel.myapplication.ui.components.hexToColor
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -31,7 +31,7 @@ import java.util.Locale
 @Composable
 fun WeeklyProgressRow(habit: Habit) {
     val today = remember { LocalDate.now() }
-    val habitColor = habit.color?.toColor() ?: MaterialTheme.colorScheme.primary
+    val habitColor = habit.color?.let { hexToColor(it) } ?: MaterialTheme.colorScheme.primary
     
     val completedDaysSet = remember(habit.completedDays, habit.lastCompletedDay) { 
         val set = habit.completedDays.toMutableSet()

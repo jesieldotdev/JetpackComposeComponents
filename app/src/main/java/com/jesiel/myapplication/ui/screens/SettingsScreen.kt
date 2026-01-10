@@ -37,8 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.jesiel.myapplication.viewmodel.AppFont
-import com.jesiel.myapplication.viewmodel.AppTheme
+import com.jesiel.myapplication.data.AppFont
+import com.jesiel.myapplication.data.AppTheme
 import com.jesiel.myapplication.viewmodel.ThemeViewModel
 import com.jesiel.myapplication.viewmodel.TodoViewModel
 

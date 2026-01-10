@@ -1,0 +1,16 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml:2:13-83
+INJECTED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml:2:13-83
+	package
+		INJECTED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml
+	xmlns:android
+		ADDED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml:2:23-81
+uses-sdk
+INJECTED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml reason: use-sdk injection requested
+INJECTED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml
+INJECTED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml
+	android:targetSdkVersion
+		INJECTED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml
+	android:minSdkVersion
+		INJECTED from /home/zorin/AndroidStudioProjects/kotlin-tasks-app/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest978851347687124414.xml

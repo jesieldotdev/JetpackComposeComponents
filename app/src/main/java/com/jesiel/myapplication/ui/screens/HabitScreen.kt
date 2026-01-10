@@ -35,7 +35,7 @@ import com.jesiel.myapplication.ui.components.AppDrawer
 import com.jesiel.myapplication.ui.components.common.BlurredBackground
 import com.jesiel.myapplication.ui.components.form.HabitBottomSheet
 import com.jesiel.myapplication.ui.components.home.HomeTopBar
-import com.jesiel.myapplication.ui.components.toColor
+import com.jesiel.myapplication.ui.components.hexToColor
 import com.jesiel.myapplication.viewmodel.HabitViewModel
 import com.jesiel.myapplication.viewmodel.ThemeViewModel
 import com.jesiel.myapplication.viewmodel.TodoViewModel
@@ -60,7 +60,6 @@ fun HabitScreen(
     val scope = rememberCoroutineScope()
     var showAddHabitSheet by remember { mutableStateOf(false) }
 
-    // Pull Refresh State
     val pullRefreshState = rememberPullRefreshState(
         refreshing = habitState.isLoading,
         onRefresh = { habitViewModel.fetchHabits() }
@@ -88,16 +87,9 @@ fun HabitScreen(
             }
         ) {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pullRefresh(pullRefreshState) // Enabled Pull Refresh
-                ) {
+                Box(modifier = Modifier.fillMaxSize().pullRefresh(pullRefreshState)) {
                     if (todoState.showBackgroundImage) {
-                        BlurredBackground(
-                            imageUrl = todoState.backgroundImageUrl,
-                            blurIntensity = todoState.blurIntensity
-                        )
+                        BlurredBackground(imageUrl = todoState.backgroundImageUrl, blurIntensity = todoState.blurIntensity)
                     } else {
                         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
                     }
@@ -109,18 +101,15 @@ fun HabitScreen(
                                 onClick = { showAddHabitSheet = true },
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Icon(Icons.Default.Add, "Novo Hábito")
-                            }
+                            ) { Icon(Icons.Default.Add, "Novo Hábito") }
                         }
                     ) { innerPadding ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding)
-                        ) {
-                            HomeTopBar(onMenuClick = { scope.launch { drawerState.open() } })
-                            
+                        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                            HomeTopBar(
+                                onMenuClick = { scope.launch { drawerState.open() } },
+                                todoViewModel = todoViewModel,
+                                habitViewModel = habitViewModel
+                            )
                             Text(
                                 text = "Meus Hábitos",
                                 style = MaterialTheme.typography.headlineSmall,
@@ -130,9 +119,7 @@ fun HabitScreen(
                             )
 
                             if (habitState.isLoading && habitState.habits.isEmpty()) {
-                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator()
-                                }
+                                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                             } else {
                                 LazyColumn(
                                     modifier = Modifier.fillMaxSize(),
@@ -152,13 +139,10 @@ fun HabitScreen(
                         }
                     }
                     
-                    // Pull Refresh Indicator
                     PullRefreshIndicator(
                         refreshing = habitState.isLoading,
                         state = pullRefreshState,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.primary
+                        modifier = Modifier.align(Alignment.TopCenter)
                     )
 
                     HabitBottomSheet(
@@ -176,147 +160,67 @@ fun HabitScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitSwipeItem(
-    habit: Habit,
-    onIncrement: () -> Unit,
-    onClick: () -> Unit,
-    onDelete: () -> Unit
-) {
+fun HabitSwipeItem(habit: Habit, onIncrement: () -> Unit, onClick: () -> Unit, onDelete: () -> Unit) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
-            if (it == SwipeToDismissBoxValue.EndToStart) {
-                onDelete()
-                true
-            } else false
+            if (it == SwipeToDismissBoxValue.EndToStart) { onDelete(); true } else false
         }
     )
-
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
-            val alignment = Alignment.CenterEnd
-            val color = MaterialTheme.colorScheme.errorContainer
-            val icon = Icons.Default.Delete
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(color)
-                    .padding(horizontal = 24.dp),
-                contentAlignment = alignment
-            ) {
-                Icon(icon, contentDescription = "Excluir", tint = MaterialTheme.colorScheme.onErrorContainer)
+            Box(Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 24.dp), contentAlignment = Alignment.CenterEnd) {
+                Icon(Icons.Default.Delete, "Excluir", tint = MaterialTheme.colorScheme.onErrorContainer)
             }
         },
         enableDismissFromStartToEnd = false,
         enableDismissFromEndToStart = true
-    ) {
-        HabitCard(habit = habit, onIncrement = onIncrement, onClick = onClick)
-    }
+    ) { HabitCard(habit = habit, onIncrement = onIncrement, onClick = onClick) }
 }
 
 @Composable
-fun HabitCard(
-    habit: Habit,
-    onIncrement: () -> Unit,
-    onClick: () -> Unit
-) {
+fun HabitCard(habit: Habit, onIncrement: () -> Unit, onClick: () -> Unit) {
     val isCompleted = habit.currentProgress >= habit.goal
     val progress = if (habit.goal > 0) habit.currentProgress.toFloat() / habit.goal else 0f
     val animatedProgress by animateFloatAsState(targetValue = progress, label = "habitProgress")
     
     val containerColor by animateColorAsState(
-        targetValue = if (isCompleted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.95f) 
-                      else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
+        targetValue = if (isCompleted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.95f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
         label = "containerColor"
     )
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).clickable { onClick() },
         shape = RoundedCornerShape(24.dp),
         color = containerColor,
         tonalElevation = if (isCompleted) 4.dp else 2.dp
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = habit.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(text = habit.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     if (habit.streak > 0) {
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "🔥 ${habit.streak}",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFFE65100)
-                        )
+                        Text(text = "🔥 ${habit.streak}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, color = Color(0xFFE65100))
                     }
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                val periodText = when(habit.period) {
-                    HabitPeriod.DAILY -> "diário"
-                    HabitPeriod.WEEKLY -> "semanal"
-                    HabitPeriod.MONTHLY -> "mensal"
-                }
-                Text(
-                    text = "${habit.currentProgress}/${habit.goal} ${habit.unit} ($periodText)",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                )
+                Text(text = "${habit.currentProgress}/${habit.goal} ${habit.unit}", style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(12.dp))
                 LinearProgressIndicator(
                     progress = { animatedProgress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(CircleShape),
-                    color = if (isCompleted) MaterialTheme.colorScheme.primary 
-                            else (habit.color?.toColor() ?: MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.fillMaxWidth().height(10.dp).clip(CircleShape),
+                    color = if (isCompleted) MaterialTheme.colorScheme.primary else (habit.color?.let { hexToColor(it) } ?: MaterialTheme.colorScheme.primary),
                     trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                 )
             }
-            
             Spacer(modifier = Modifier.width(16.dp))
-            
             if (isCompleted) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(MaterialTheme.colorScheme.primary, shape = CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Concluído",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
+                Box(modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.primary, shape = CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.Check, "Concluído", tint = MaterialTheme.colorScheme.onPrimary)
                 }
             } else {
-                IconButton(
-                    onClick = onIncrement,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = (habit.color?.toColor() ?: MaterialTheme.colorScheme.primary).copy(alpha = 0.2f),
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Incrementar",
-                        tint = habit.color?.toColor() ?: MaterialTheme.colorScheme.primary
-                    )
+                IconButton(onClick = onIncrement, modifier = Modifier.size(48.dp).background(color = (habit.color?.let { hexToColor(it) } ?: MaterialTheme.colorScheme.primary).copy(alpha = 0.2f), shape = CircleShape)) {
+                    Icon(Icons.Default.Add, "Incrementar", tint = habit.color?.let { hexToColor(it) } ?: MaterialTheme.colorScheme.primary)
                 }
             }
         }

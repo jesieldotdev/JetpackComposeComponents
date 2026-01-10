@@ -25,7 +25,6 @@ kotlin {
                 implementation(compose.ui)
                 implementation(compose.components.resources)
                 
-                // Use as versões KMP das bibliotecas
                 implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.7")
                 implementation("androidx.lifecycle:lifecycle-runtime:2.8.7")
                 implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -38,6 +37,11 @@ kotlin {
                 implementation("io.coil-kt.coil3:coil-network-ktor:3.0.0-alpha06")
 
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+                
+                // KStore para persistência multiplatform
+                implementation("io.github.xxfast:kstore:0.7.2")
+                implementation("io.github.xxfast:kstore-file:0.7.2")
             }
         }
         val androidMain by getting {
@@ -50,7 +54,6 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(libs.ktor.client.cio)
-                // Essencial para o Dispatchers.Main no Desktop
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.1")
             }
         }
@@ -62,5 +65,9 @@ android {
     compileSdk = 36
     defaultConfig {
         minSdk = 26
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }

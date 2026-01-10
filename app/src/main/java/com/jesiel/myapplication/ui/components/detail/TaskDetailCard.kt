@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.data.Task
-import com.jesiel.myapplication.ui.components.toColor
+import com.jesiel.myapplication.ui.components.hexToColor
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -36,7 +36,7 @@ fun TaskDetailCard(task: Task) {
                     modifier = Modifier
                         .size(14.dp)
                         .clip(CircleShape)
-                        .background(task.color?.toColor() ?: Color.Transparent)
+                        .background(task.color?.let { hexToColor(it) } ?: Color.Transparent)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(

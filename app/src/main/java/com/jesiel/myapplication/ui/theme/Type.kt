@@ -5,9 +5,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import com.jesiel.myapplication.R
-import com.jesiel.myapplication.viewmodel.AppFont
+import com.jesiel.myapplication.data.AppFont
 
 val Poppins = FontFamily(
     Font(R.font.poppins_regular, FontWeight.Normal),

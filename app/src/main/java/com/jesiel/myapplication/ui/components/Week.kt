@@ -13,28 +13,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.jesiel.myapplication.ui.theme.myTodosTheme
+import com.jesiel.myapplication.ui.theme.MyTodosTheme
 import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.Locale
 
 @Composable
 fun Week() {
-    // Translated and abbreviated days of the week in Portuguese
     val daysOfWeek = listOf("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
-    val today = LocalDate.now().dayOfWeek.value - 1 // Monday is 1, so we subtract 1 to get index 0
+    val today = LocalDate.now().dayOfWeek.value - 1
     var selectedIndex by remember { mutableStateOf(today) }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         daysOfWeek.forEachIndexed { i, day ->
             Day(
                 day = day,
-                // Simple example for numbers, can be improved to match the actual calendar
                 number = (LocalDate.now().dayOfMonth - today + i).toString(),
                 isSelected = i == selectedIndex,
                 onClick = { selectedIndex = i }
@@ -51,7 +46,6 @@ fun Day(
     onClick: () -> Unit = {}
 ) {
     val palette = MaterialTheme.colorScheme
-    // Use onSurfaceVariant for better contrast in light/dark themes
     val textColor = if (isSelected) palette.primary else palette.onSurfaceVariant
 
     Column(
@@ -89,7 +83,7 @@ fun Day(
 @Preview(showBackground = true)
 @Composable
 fun PreviewWeek() {
-    myTodosTheme(dynamicColor = false) {
+    MyTodosTheme {
         Week()
     }
 }

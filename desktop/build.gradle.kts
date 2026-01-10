@@ -34,8 +34,8 @@ compose.desktop {
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
                 org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb
             )
-            packageName = "com.jesiel.myapplication"
-            packageVersion = "1.0.0"
+            packageName = "Taska App"
+            packageVersion = "1.0.2"
             
             linux {
                 shortcut = true

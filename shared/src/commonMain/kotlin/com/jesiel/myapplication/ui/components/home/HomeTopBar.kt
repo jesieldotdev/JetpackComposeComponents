@@ -12,9 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.jesiel.myapplication.ui.components.Header
+import com.jesiel.myapplication.viewmodel.HabitViewModel
+import com.jesiel.myapplication.viewmodel.TodoViewModel
 
 @Composable
-fun HomeTopBar(onMenuClick: () -> Unit) {
+fun HomeTopBar(
+    onMenuClick: () -> Unit,
+    todoViewModel: TodoViewModel,
+    habitViewModel: HabitViewModel
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -22,7 +28,11 @@ fun HomeTopBar(onMenuClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Header(modifier = Modifier.weight(1f))
+//        Header(
+//            modifier = Modifier.weight(1f),
+//            todoViewModel = todoViewModel,
+//            habitViewModel = habitViewModel
+//        )
         
         Surface(
             modifier = Modifier

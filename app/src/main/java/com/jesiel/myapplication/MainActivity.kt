@@ -11,15 +11,21 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.jesiel.myapplication.data.PreferenceManager
+import com.jesiel.myapplication.data.ReminderManager
+import com.jesiel.myapplication.data.ApiService
 import com.jesiel.myapplication.ui.screens.*
-import com.jesiel.myapplication.ui.theme.myTodosTheme
+import com.jesiel.myapplication.ui.theme.MyTodosTheme
 import com.jesiel.myapplication.viewmodel.*
 
 class MainActivity : ComponentActivity() {
@@ -28,11 +34,7 @@ class MainActivity : ComponentActivity() {
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission granted
-        }
-    }
+    ) { isGranted: Boolean -> }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,21 +43,51 @@ class MainActivity : ComponentActivity() {
         currentIntent = intent
 
         setContent {
-            val themeViewModel: ThemeViewModel = viewModel()
+            val context = LocalContext.current
+            val preferenceManager = remember { PreferenceManager(context) }
+            val reminderManager = remember { ReminderManager(context) }
+            val apiService = remember { ApiService() }
+            
+            val themeViewModel: ThemeViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return ThemeViewModel(preferenceManager) as T
+                    }
+                }
+            )
+            
+            val todoViewModel: TodoViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return TodoViewModel(preferenceManager, reminderManager, apiService) as T
+                    }
+                }
+            )
+
+            val habitViewModel: HabitViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return HabitViewModel(apiService) as T
+                    }
+                }
+            )
+            
             val themeState by themeViewModel.themeState.collectAsState()
             
             val useDarkTheme = when (themeState.theme) {
-                AppTheme.LIGHT -> false
-                AppTheme.DARK -> true
-                AppTheme.SYSTEM -> isSystemInDarkTheme()
+                com.jesiel.myapplication.data.AppTheme.LIGHT -> false
+                com.jesiel.myapplication.data.AppTheme.DARK -> true
+                com.jesiel.myapplication.data.AppTheme.SYSTEM -> isSystemInDarkTheme()
             }
 
-            myTodosTheme(
-                darkTheme = useDarkTheme,
-                dynamicColor = themeState.useDynamicColors,
-                appFont = themeState.font
-            ) {
-                AppNavigation(themeViewModel = themeViewModel, intent = currentIntent)
+            // Atualizado para usar o nome correto do módulo shared
+            MyTodosTheme(darkTheme = useDarkTheme) {
+                AppNavigation(
+                    themeViewModel = themeViewModel, 
+                    todoViewModel = todoViewModel,
+                    habitViewModel = habitViewModel,
+                    intent = currentIntent
+                )
             }
         }
     }
@@ -76,13 +108,15 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppNavigation(themeViewModel: ThemeViewModel, intent: Intent?) {
+fun AppNavigation(
+    themeViewModel: ThemeViewModel, 
+    todoViewModel: TodoViewModel,
+    habitViewModel: HabitViewModel,
+    intent: Intent?
+) {
     val navController = rememberNavController()
-    val todoViewModel: TodoViewModel = viewModel()
-    val habitViewModel: HabitViewModel = viewModel()
     val uiState by todoViewModel.uiState.collectAsState()
 
-    // Handle deep link navigation from notifications
     LaunchedEffect(intent) {
         intent?.let {
             val taskId = it.getIntExtra("navigate_to_task_id", -1)
@@ -100,24 +134,14 @@ fun AppNavigation(themeViewModel: ThemeViewModel, intent: Intent?) {
         navController = navController,
         startDestination = "home",
     ) {
-        composable("login") { LoginScreen(navController) }
-        
         composable("home") { 
             HomeScreen(
                 todoViewModel = todoViewModel,
                 themeViewModel = themeViewModel,
-                onNavigateToDetail = { taskId -> 
-                    navController.navigate("detail/$taskId") 
-                },
-                onNavigateToAbout = {
-                    navController.navigate("about")
-                },
-                onNavigateToSettings = {
-                    navController.navigate("settings")
-                },
-                onNavigateToHabits = {
-                    navController.navigate("habits")
-                }
+                onNavigateToDetail = { taskId -> navController.navigate("detail/$taskId") },
+                onNavigateToAbout = { navController.navigate("about") },
+                onNavigateToSettings = { navController.navigate("settings") },
+                onNavigateToHabits = { navController.navigate("habits") }
             ) 
         }
         

@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,20 +24,34 @@ import com.jesiel.myapplication.ui.components.home.CategoryFilterBar
 import com.jesiel.myapplication.ui.components.common.BlurredBackground
 import com.jesiel.myapplication.ui.components.form.TaskInputField
 import com.jesiel.myapplication.ui.components.form.ColorPicker
+import com.jesiel.myapplication.ui.components.Header
 import com.jesiel.myapplication.viewmodel.TodoViewModel
+import com.jesiel.myapplication.viewmodel.HabitViewModel
+import com.jesiel.myapplication.data.Task
 import com.jesiel.myapplication.data.TaskStatus
 
 @Composable
 fun HomeScreen(
     todoViewModel: TodoViewModel,
+    habitViewModel: HabitViewModel, // Adicionado para o Header inteligente
+    isKanbanMode: Boolean = false,
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToHabits: () -> Unit = {},
+    onNavigateToDetail: (Int) -> Unit = {}
 ) {
     val uiState by todoViewModel.uiState.collectAsState()
     
-    val (pendingTasks, doneTasks) = remember(uiState.tasks) {
-        uiState.tasks.partition { it.status != TaskStatus.DONE }
+    val (pendingTasks, doneTasks) = remember(uiState.tasks, uiState.selectedCategory) {
+        val filtered = if (uiState.selectedCategory == "Tudo") uiState.tasks else uiState.tasks.filter { it.category == uiState.selectedCategory }
+        filtered.partition { it.status != TaskStatus.DONE }
     }
 
+    val categories = remember(uiState.tasks) {
+        listOf("Tudo") + uiState.tasks.mapNotNull { it.category }.filter { it.isNotBlank() }.distinct()
+    }
+
+    // Estados do Formulário Lateral
+    var editingTaskId by remember { mutableStateOf<Int?>(null) }
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
@@ -48,11 +63,7 @@ fun HomeScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (uiState.showBackgroundImage) {
-            BlurredBackground(
-                imageUrl = uiState.backgroundImageUrl,
-                blurIntensity = uiState.blurIntensity,
-                scrimAlpha = 0.8f
-            )
+            BlurredBackground(imageUrl = uiState.backgroundImageUrl, blurIntensity = uiState.blurIntensity, scrimAlpha = 0.8f)
         }
 
         Row(modifier = Modifier.fillMaxSize().padding(16.dp)) {
@@ -68,10 +79,11 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
+                IconButton(onClick = onNavigateToHabits) { Icon(Icons.Default.CheckCircle, "Habits", tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(28.dp)) }
                 Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(28.dp))
                 IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, null, tint = Color.White.copy(alpha = 0.7f)) }
                 Spacer(modifier = Modifier.weight(1f))
-                Icon(Icons.Default.ExitToApp, null, tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = Color.White)
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -86,15 +98,15 @@ fun HomeScreen(
                     .padding(24.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column {
-                        Text("Olá, Bob!", fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                        Text("Dashboard de Tarefas", color = Color.Gray, fontSize = 12.sp)
-                    }
-                    Spacer(Modifier.weight(1f))
+                    Header(
+//                        modifier = Modifier.width(80.dp),
+                        todoViewModel = todoViewModel,
+                        habitViewModel = habitViewModel
+                    )
                     CategoryFilterBar(
-                        categories = listOf("Tudo", "dev", "Compras", "Features"),
+                        categories = categories,
                         selectedCategory = uiState.selectedCategory,
-                        onCategorySelected = {}
+                        onCategorySelected = { todoViewModel.setSelectedCategory(it) }
                     )
                 }
 
@@ -103,20 +115,54 @@ fun HomeScreen(
                 Row(modifier = Modifier.fillMaxSize()) {
                     Column(modifier = Modifier.weight(0.6f)) {
                         Text("Minhas Tarefas", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        TaskListView(
-                            pendingTasks = pendingTasks,
-                            doneTasks = doneTasks,
-                            onToggleTaskStatus = { todoViewModel.toggleTaskStatus(it) }
-                        )
+                        
+                        if (isKanbanMode) {
+                            KanbanScreen(
+                                uiState = uiState,
+                                onUpdateStatus = { id, status -> 
+                                    val t = uiState.tasks.find { it.id == id }
+                                    todoViewModel.updateTask(id, t?.title ?: "", t?.description, t?.category, t?.color, t?.reminder) 
+                                },
+                                onDeleteTask = { todoViewModel.deleteTodo(it) },
+                                onTaskClick = { id ->
+                                    val task = uiState.tasks.find { it.id == id }
+                                    if (task != null) {
+                                        editingTaskId = task.id
+                                        title = task.title
+                                        description = task.description ?: ""
+                                        category = task.category ?: ""
+                                        selectedColor = task.color ?: colors[0]
+                                    }
+                                }
+                            )
+                        } else {
+                            TaskListView(
+                                pendingTasks = pendingTasks,
+                                doneTasks = doneTasks,
+                                onToggleTaskStatus = { todoViewModel.toggleTaskStatus(it) },
+                                onDeleteTask = { todoViewModel.deleteTodo(it) },
+                                onTaskClick = { id ->
+                                    val task = uiState.tasks.find { it.id == id }
+                                    if (task != null) {
+                                        editingTaskId = task.id
+                                        title = task.title
+                                        description = task.description ?: ""
+                                        category = task.category ?: ""
+                                        selectedColor = task.color ?: colors[0]
+                                    }
+                                }
+                            )
+                        }
                     }
 
                     Column(
                         modifier = Modifier.weight(0.4f).padding(start = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        val progress = if (uiState.tasks.isNotEmpty()) doneTasks.size.toFloat() / uiState.tasks.size else 0f
                         Box(modifier = Modifier.size(200.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(progress = { 0.84f }, modifier = Modifier.fillMaxSize(), color = primaryColor, strokeWidth = 12.dp)
-                            Text("84%", fontWeight = FontWeight.Bold, fontSize = 32.sp, color = primaryColor)
+                            CircularProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxSize(), color = primaryColor, strokeWidth = 12.dp)
+                            Text("${(progress * 100).toInt()}%", fontWeight = FontWeight.Bold, fontSize = 32.sp, color = primaryColor)
                         }
                         Text("Progresso Diário", fontWeight = FontWeight.Medium, color = Color.Gray)
                     }
@@ -125,7 +171,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            // 3. PAINEL DE ADIÇÃO (Idêntico ao Mobile)
+            // 3. PAINEL DE ADIÇÃO / EDIÇÃO
             Column(
                 modifier = Modifier
                     .width(320.dp)
@@ -135,7 +181,12 @@ fun HomeScreen(
                     .padding(24.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Text("Nova Tarefa", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold, color = primaryColor)
+                Text(
+                    text = if (editingTaskId == null) "Nova Tarefa" else "Editar Tarefa", 
+                    style = MaterialTheme.typography.headlineSmall, 
+                    fontWeight = FontWeight.ExtraBold, 
+                    color = primaryColor
+                )
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 TaskInputField(value = title, onValueChange = { title = it }, label = "O que fazer?", icon = Icons.Default.Create)
@@ -151,11 +202,33 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(40.dp))
                 
                 Button(
-                    onClick = { /* todoViewModel.addTodo(...) */ },
+                    onClick = { 
+                        if (title.isNotBlank()) {
+                            if (editingTaskId == null) {
+                                todoViewModel.addTodo(title, description, category, selectedColor, null)
+                            } else {
+                                todoViewModel.updateTask(editingTaskId!!, title, description, category, selectedColor, null)
+                            }
+                            editingTaskId = null
+                            title = ""
+                            description = ""
+                            category = ""
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().height(58.dp),
-                    shape = RoundedCornerShape(20.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    enabled = title.isNotBlank()
                 ) {
-                    Text("Criar Tarefa", fontWeight = FontWeight.Bold)
+                    Text(if (editingTaskId == null) "Criar Tarefa" else "Atualizar Tarefa", fontWeight = FontWeight.Bold)
+                }
+                
+                if (editingTaskId != null) {
+                    TextButton(
+                        onClick = { editingTaskId = null; title = ""; description = ""; category = "" },
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    ) {
+                        Text("Cancelar Edição", color = Color.Gray)
+                    }
                 }
             }
         }

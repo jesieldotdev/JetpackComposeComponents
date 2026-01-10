@@ -26,6 +26,7 @@ import com.jesiel.myapplication.ui.components.common.BlurredBackground
 import com.jesiel.myapplication.ui.components.home.CategoryFilterBar
 import com.jesiel.myapplication.ui.components.home.HomeTopBar
 import com.jesiel.myapplication.ui.components.home.TaskListView
+import com.jesiel.myapplication.viewmodel.HabitViewModel
 import com.jesiel.myapplication.viewmodel.ThemeViewModel
 import com.jesiel.myapplication.viewmodel.TodoUiState
 import com.jesiel.myapplication.viewmodel.TodoViewModel
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     todoViewModel: TodoViewModel = viewModel(),
     themeViewModel: ThemeViewModel = viewModel(),
+    habitViewModel: HabitViewModel = viewModel(),
     onNavigateToDetail: (Int) -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
@@ -122,14 +124,19 @@ fun HomeScreen(
                     }
                 ) { innerPadding ->
                     HomeContent(
+                        todoViewModel = todoViewModel,
+                        habitViewModel = habitViewModel,
                         uiState = uiState,
                         isKanbanMode = themeState.isKanbanMode,
                         showSheet = showSheet,
                         onDismissSheet = { showSheet = false },
-                        onSaveTodo = { t, d, c, cl, r -> todoViewModel.addTodo(context, t, d, c, cl, r) },
+                        onSaveTodo = { t, d, c, cl, r -> todoViewModel.addTodo(t, d, c, cl, r) },
                         onRefresh = { todoViewModel.refresh() },
-                        onToggleTaskStatus = { id -> todoViewModel.toggleTaskStatus(context, id) },
-                        onUpdateTaskStatus = { id, s -> todoViewModel.updateTaskStatus(context, id, s) },
+                        onToggleTaskStatus = { id -> todoViewModel.toggleTaskStatus(id) },
+                        onUpdateTaskStatus = { id, s -> 
+                            val task = uiState.tasks.find { it.id == id }
+                            todoViewModel.updateTask(id, task?.title ?: "", task?.description, task?.category, task?.color, task?.reminder)
+                        },
                         onDeleteTask = { id -> todoViewModel.deleteTodo(id) },
                         onTaskClick = onNavigateToDetail,
                         onMenuClick = { scope.launch { drawerState.open() } },
@@ -145,6 +152,8 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeContent(
+    todoViewModel: TodoViewModel,
+    habitViewModel: HabitViewModel,
     uiState: TodoUiState,
     isKanbanMode: Boolean,
     showSheet: Boolean,
@@ -182,20 +191,30 @@ fun HomeContent(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         } else {
             Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
-                HomeTopBar(onMenuClick = onMenuClick)
+                HomeTopBar(
+                    onMenuClick = onMenuClick,
+                    todoViewModel = todoViewModel,
+                    habitViewModel = habitViewModel
+                )
                 CategoryFilterBar(categories, uiState.selectedCategory) { onCategorySelect(it) }
                 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 if (isKanbanMode) {
                     KanbanScreen(
-                        uiState = uiState.copy(tasks = if (uiState.selectedCategory == "Tudo") uiState.tasks else uiState.tasks.filter { it.category == uiState.selectedCategory }),
+                        uiState = uiState,
                         onUpdateStatus = onUpdateTaskStatus,
                         onDeleteTask = onDeleteTask,
                         onTaskClick = onTaskClick
                     )
                 } else {
-                    TaskListView(pendingTasks, doneTasks, onToggleTaskStatus, onDeleteTask, onTaskClick)
+                    TaskListView(
+                        pendingTasks = pendingTasks, 
+                        doneTasks = doneTasks, 
+                        onToggleTaskStatus = onToggleTaskStatus, 
+                        onDeleteTask = onDeleteTask,
+                        onTaskClick = onTaskClick
+                    )
                 }
             }
         }

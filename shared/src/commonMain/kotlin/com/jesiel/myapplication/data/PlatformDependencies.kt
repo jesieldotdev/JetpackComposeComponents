@@ -1,8 +1,12 @@
 package com.jesiel.myapplication.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class AppTheme { LIGHT, DARK, SYSTEM }
+
+@Serializable
 enum class AppFont { SYSTEM, POPPINS, MONOSPACE, SERIF }
 
 interface IPreferenceManager {
